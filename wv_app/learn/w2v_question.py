@@ -37,48 +37,25 @@ class question():
         #질의어의 벡터 평균을 뽑는다.
         r_question = getWordStringList(self.mecab, question, 'EC,JX,ETN')
         """
-        aggr_body = es.question_query_to_vector(self.version, ' '.join(r_question))
+        #1.aggregations 방식
+        aggr_body = es.question_aggr_query_to_vector(self.version, ' '.join(r_question))
         query_float = es.search_avg(model_idx,aggr_body)
         #knn 검색 결과를 리턴한다.
         result = {}
         if query_float[0] != None:
             knn_body = es.question_vector_query(self.version,query_float)
-            # print(knn_body)
             result = es.search(question_idx,knn_body)
         else:
             result = {'error' : 'No matching value found.'}
         return result
         """
+        #2.mean_vector 방식
         weights = np.ones(len(r_question))
-        print(weights)
         mean = np.zeros(100, np.float32)
-        
         total_weight = 0
         for idx, key in enumerate(r_question):
-            query = {
-                "from": 0,
-                "size": 1,
-                "query": {
-                    "bool": {
-                        "must": [
-                            {
-                                "query_string" : {
-                                    "query" : key,
-                                    "fields": ["term"]
-                                }
-                            }
-                        ],
-                        "filter": [
-                            {
-                                "query_string": {
-                                "query": "version:" + self.version
-                                }
-                            }
-                        ]
-                    }
-                }
-            }
-            result = es.search_vector(model_idx,query)
+            query_body = es.question_query_to_vector(self.version,key)
+            result = es.search_vector(model_idx,query_body)
             if result != -1:
                 result_float = np.array(result)
                 norms = np.linalg.norm(result_float, axis=0, ord=2) #L2 선형함수 값 구하기
@@ -92,7 +69,6 @@ class question():
         result = {}
         if mean[0] != 0.0:
             knn_body = es.question_vector_query(self.version,mean)
-            # print(knn_body)
             result = es.search(question_idx,knn_body)
         else:
             result = {'error' : 'No matching value found.'}
@@ -130,7 +106,6 @@ class vec_dic_question():
         result = {}
         if query_float[0] != 0.0:
             knn_body = es.question_vector_query(self.version,query_float)
-            # print(knn_body)
             result = es.search(question_idx,knn_body)
         else:
             result = {'error' : 'No matching value found.'}

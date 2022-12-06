@@ -190,7 +190,7 @@ class elastic_util:
         """
         return helpers.bulk(self.es, body)
     
-    def question_query_to_vector(self, version, query_string):
+    def question_aggr_query_to_vector(self, version, query_string):
         aggregations = {}
         for dm in range(0,100):
             aggr = {
@@ -229,6 +229,34 @@ class elastic_util:
             },
             "aggregations": aggregations
         }
+        if int(version) > -1 :
+            filter = [
+                {
+                    "query_string": {
+                        "query": "version:" + version
+                    }
+                }
+            ]
+            source['query']['bool']['filter'] = filter
+        return source
+    
+    def question_query_to_vector(self, version, query_string):
+        source = {
+                "from": 0,
+                "size": 1,
+                "query": {
+                    "bool": {
+                        "must": [
+                            {
+                                "query_string" : {
+                                    "query" : query_string,
+                                    "fields": ["term"]
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
         if int(version) > -1 :
             filter = [
                 {
