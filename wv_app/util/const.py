@@ -1,7 +1,6 @@
 
 class const():
     def __init__(self):
-        
         self._train_state = '$train_state'
         self._dev_idx = '$xdev_'
         self._svc_idx = '$xsvc_'

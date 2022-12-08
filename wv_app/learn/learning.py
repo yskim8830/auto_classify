@@ -78,6 +78,17 @@ class learn(threading.Thread):
                         }
                     }
                 }
+                
+                #카테고리정보 로드
+                cate_body = {
+                            "query": {
+                                "query_string": {
+                                    "query": "siteNo:" + str(site_no) + " AND useYn:y"
+                                }
+                            }
+                        }
+                category = es.search_srcoll('@prochat_category', cate_body)
+                
                 if userdefine.get(str(site_no)):
                     #사용자 사전 export
                     file_util.export_user_dic(mecab_dic_path,userdefine[str(site_no)])
@@ -239,6 +250,11 @@ class learn(threading.Thread):
                     _source['dialogNo']  = question['dialogNo']
                     _source['dialogNm']  = dialogNm
                     _source['categoryNo']  = int(categoryNo)
+                    category_info = (item for item in category if item['_id'] == str(categoryNo))
+                    row_category = next(category_info, False)
+                    if row_category != False:
+                        _source['fullItem']  = row_category['_source']['fullItem']
+                        _source['categoryNm']  = row_category['_source']['categoryNm']
                     _source['termNo']  = orgTermCnt
                     _source['term']  = orgTerm
                     _source['term_syn']  = synonymTerm
@@ -306,12 +322,18 @@ class learn(threading.Thread):
                         _source['version']  = new_version
                         _source['siteNo']  = site_no
                         _source['categoryNo']  = dIntent['categoryNo']
+                        category_info = (item for item in category if item['_id'] == str(dIntent['categoryNo']))
+                        row_category = next(category_info, False)
+                        if row_category != False:
+                            _source['fullItem']  = row_category['_source']['fullItem']
+                            _source['categoryNm']  = row_category['_source']['categoryNm']
                         _source['term_syn']  = dIntent['term_syn']
                         _source['terms']  = dIntent['term_syn'].replace(' ','')
                         #morphList = m.morphs(dIntent['term_syn'])
                         if dIntent['term_syn'] != '':
-                            morphList = getWordStringList(m, dIntent['term_syn'], 'EC,JX,ETN')
-                            _source['question_vec']  = model.wv.get_mean_vector(morphList)
+                            # morphList = getWordStringList(m, dIntent['term_syn'], 'EC,JX,ETN')
+                            # _source['question_vec']  = model.wv.get_mean_vector(morphList)
+                            _source['question_vec']  = model.wv.get_mean_vector(str(dIntent['term_syn']).split(' '))
                         _source['term']  = dIntent['term']
                         _source['termNo']  = ''
                         intent_row['_source'] = _source
@@ -324,8 +346,10 @@ class learn(threading.Thread):
                         terms = source['term_syn']
                         if terms != '':
                             #morphList = m.morphs(terms)
-                            morphList = getWordStringList(m, terms, 'EC,JX,ETN')
-                            source['question_vec'] = model.wv.get_mean_vector(morphList)
+                            # morphList = getWordStringList(m, terms, 'EC,JX,ETN')
+                            # source['question_vec'] = model.wv.get_mean_vector(morphList)
+                            source['question_vec'] = model.wv.get_mean_vector(str(terms).split(' '))
+                            
                         question_row['_source'] = source
                         totalDevQuestion.append(question_row)
                     logger.info("complete set vector")

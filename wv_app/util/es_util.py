@@ -353,6 +353,12 @@ class elastic_util:
                     "categoryNo": {
                         "type": "long"
                     },
+                    "categoryNm": {
+                        "type" : "keyword",
+                    },
+                    "fullItem": {
+                        "type" : "text",
+                    },
                     "dialogNm": {
                         "type": "text",
                         "analyzer": "pro10_kr",

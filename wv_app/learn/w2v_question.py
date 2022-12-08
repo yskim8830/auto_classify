@@ -1,10 +1,12 @@
 import logging
 import os
+from datetime import datetime
 from konlpy.tag import Mecab
 import numpy as np
 from gensim.models import Word2Vec
 from ..util.const import const
 from ..util.es_util import elastic_util
+from ..util import string_util
 
 logger = logging.getLogger('my')
 index = const()
@@ -21,6 +23,7 @@ class question():
         else:
             self.mecab = Mecab()
     def word2vec_question(self, question):
+        starttime = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
         es_urls = self.searchip.split(':')
         #검색엔진에 연결한다.
         es = elastic_util(es_urls[0], es_urls[1])
@@ -35,7 +38,7 @@ class question():
             model_idx = index.dev_idx + index.model + str(self.site_no)
         
         #질의어의 벡터 평균을 뽑는다.
-        r_question = getWordStringList(self.mecab, question, 'EC,JX,ETN')
+        r_question = getWordStringList(self.mecab, string_util.filterSentence(question.lower()), 'EC,JX,ETN')
         """
         #1.aggregations 방식
         aggr_body = es.question_aggr_query_to_vector(self.version, ' '.join(r_question))
@@ -66,13 +69,21 @@ class question():
         if(total_weight > 0):
             mean = mean / total_weight
         #knn 검색 결과를 리턴한다.
-        result = {}
+        total_results = {}
         if mean[0] != 0.0:
             knn_body = es.question_vector_query(self.version,mean)
-            result = es.search(question_idx,knn_body)
+            total_results = es.search(question_idx,knn_body)
+            results = []
+            for idx, rst in enumerate(total_results):
+                rst['reliability'] = "{:.2f}%".format(rst['_score'])
+                results.append(rst)
+                #results.append({"categoryNo" : rst['_source']['categoryNo'], "categoryNm" : rst['_source']['categoryNm'], "fullItem" : rst['_source']['fullItem'], "score" : rst['_score'], "reliability" : "{:.2f}%".format(rst['_score'])})
+            endtime = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
+            runtime = (datetime.strptime(endtime, '%Y%m%d%H%M%S%f')-datetime.strptime(starttime, '%Y%m%d%H%M%S%f')).total_seconds()
+            total_results = {"result" : results, "runtime" : runtime}
         else:
-            result = {'error' : 'No matching value found.'}
-        return result
+            total_results = {'error' : 'No matching value found.'}
+        return total_results
 
 #2. word2vec model file search
 class vec_dic_question():
