@@ -268,10 +268,10 @@ class elastic_util:
             source['query']['bool']['filter'] = filter
         return source
     
-    def question_vector_query(self, version, vector: list):
+    def question_vector_query(self, version, vector: list, size):
         source = {
             "from": 0,
-            "size": 5,
+            "size": size,
             "query": {
                 "bool": {
                     "must": [

@@ -22,7 +22,7 @@ class learn(threading.Thread):
         self.name = name #Thread Name
         
     def learningBERT(self, data):
-        debug = data['debug']
+        #debug = data['debug']
         
         es_urls = str(data['esUrl']).split(':')
         #검색엔진에 연결한다.
@@ -30,7 +30,9 @@ class learn(threading.Thread):
         
         site_no = data['siteNo']
         dic_path = data['dicPath']
-        mecab_dic_path = data['mecabDicPath']
+        mecab_dic_path = '/usr/local/lib/mecab/dic'
+        if data.get('mecabDicPath') != None :
+            mecab_dic_path = data['mecabDicPath']
         userId = data['userId']
         
         error_msg = ""

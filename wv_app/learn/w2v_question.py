@@ -13,11 +13,15 @@ index = const()
 
 #1. elasticsearch model index search
 class question():
-    def __init__(self,site_no,searchip,version,mecab_dic_path):
+    def __init__(self,site_no,searchip,version,mecab_dic_path,size):
         self.site_no = site_no
         self.searchip = searchip
         self.version = version
         self.mecab_dic_path = mecab_dic_path
+        if size != None:
+            self.size = size
+        else:
+            self.size = 5
         if mecab_dic_path != None:
             self.mecab = Mecab(dicpath=self.mecab_dic_path+'/mecab-ko-dic') # 사전 저장 경로에 자신이 mecab-ko-dic를 저장한 위치를 적는다. (default: "/usr/local/lib/mecab/dic/mecab-ko-dic") https://lsjsj92.tistory.com/612
         else:
@@ -71,7 +75,7 @@ class question():
         #knn 검색 결과를 리턴한다.
         total_results = {}
         if mean[0] != 0.0:
-            knn_body = es.question_vector_query(self.version,mean)
+            knn_body = es.question_vector_query(version=self.version,vector=mean,size=self.size)
             total_results = es.search(question_idx,knn_body)
             results = []
             for idx, rst in enumerate(total_results):
@@ -87,12 +91,16 @@ class question():
 
 #2. word2vec model file search
 class vec_dic_question():
-    def __init__(self,site_no,searchip,version,dic_path,mecab_dic_path):
+    def __init__(self,site_no,searchip,version,dic_path,mecab_dic_path,size):
         self.site_no = site_no
         self.searchip = searchip
         self.version = version
         self.dic_path = dic_path
         self.mecab_dic_path = mecab_dic_path
+        if size != None:
+            self.size = size
+        else:
+            self.size = 5
         self.model = Word2Vec.load(fname=os.path.join(self.dic_path,'word2vec_'+str(self.site_no)))
         if mecab_dic_path != None:
             self.mecab = Mecab(dicpath=self.mecab_dic_path+'/mecab-ko-dic') # 사전 저장 경로에 자신이 mecab-ko-dic를 저장한 위치를 적는다. (default: "/usr/local/lib/mecab/dic/mecab-ko-dic") https://lsjsj92.tistory.com/612
@@ -116,7 +124,7 @@ class vec_dic_question():
         #knn 검색 결과를 리턴한다.
         result = {}
         if query_float[0] != 0.0:
-            knn_body = es.question_vector_query(self.version,query_float)
+            knn_body = es.question_vector_query(version=self.version,vector=query_float,size=self.size)
             result = es.search(question_idx,knn_body)
         else:
             result = {'error' : 'No matching value found.'}
