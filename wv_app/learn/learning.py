@@ -117,7 +117,7 @@ class learn(threading.Thread):
                 logger.info("[trainToDev] pattern to dev end [ site : "+str(site_no) +" ] ")
                         
                 #인텐트
-                m = Mecab(dicpath=mecab_dic_path+'/mecab-ko-dic') # 사전 저장 경로에 자신이 mecab-ko-dic를 저장한 위치를 적는다. (default: "/usr/local/lib/mecab/dic/mecab-ko-dic") https://lsjsj92.tistory.com/612
+                m = Mecab(dicpath=os.path.join(mecab_dic_path, 'mecab-ko-dic')) # 사전 저장 경로에 자신이 mecab-ko-dic를 저장한 위치를 적는다. (default: "/usr/local/lib/mecab/dic/mecab-ko-dic") https://lsjsj92.tistory.com/612
                 intentNameMap = dict()
                 categoryMap = dict()
                 intentMapList = es.search_srcoll('@prochat_dialog',query_string)
@@ -151,7 +151,6 @@ class learn(threading.Thread):
                     _source['keywords'] = str(intent['keywords']).replace(',',' ')
                     
                     sentence = string_util.filterSentence(dialogNm.lower())
-                    #morphList = m.morphs(sentence) #품사 제거 등 추가 해야함. 임시
                     morphList = getWordStringList(m, sentence, 'EC,JX,ETN')
                     
                     #불용어 제거 stopwords
@@ -208,7 +207,6 @@ class learn(threading.Thread):
                     
                     id = str(question['dialogNo'])
                     sentence = string_util.filterSentence(str(question['question']).lower())
-                    #morphList = m.morphs(sentence) #품사 제거 등 추가 해야함. 임시
                     morphList = getWordStringList(m, sentence, 'EC,JX,ETN')
                     #불용어 제거 stopwords
                     sList = []
