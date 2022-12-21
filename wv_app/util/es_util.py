@@ -19,6 +19,13 @@ class elastic_util:
     def getInfo(self):
         return self.es.info()
     
+    #create template
+    def createtemplate(self, name, mapping):
+        if self.es.indices.exists_template(name=name):
+            pass
+        else:
+            return self.es.indices.put_template(name=name, body=mapping)
+    
     #existIndex
     def existIndex(self, idx):
         return self.es.indices.exists(index=idx)
@@ -29,6 +36,8 @@ class elastic_util:
             pass
         else:
             return self.es.indices.create(index=idx, body=mapping)
+    
+    
     
     #deleteindex
     def deleteindex(self, idx):
@@ -268,9 +277,9 @@ class elastic_util:
             source['query']['bool']['filter'] = filter
         return source
     
-    def question_vector_query(self, version, vector: list, size):
+    def question_vector_query(self, version, vector: list, sfrom=0, size=5):
         source = {
-            "from": 0,
+            "from": sfrom,
             "size": size,
             "query": {
                 "bool": {
@@ -284,8 +293,17 @@ class elastic_util:
                                 "vec": vector
                             }
                         }
-                    ]
+                    ],"must_not": {
+                        "term": {
+                            "categoryNo": {
+                                "value": "0"
+                            }
+                        }
+                    }
                 }
+            },
+            "collapse": {
+                "field": "categoryNo"
             }
         }
         if int(version) > -1 :
@@ -442,6 +460,481 @@ class elastic_util:
                         "type": "keyword"
                     }
                 }
+            }
+        }
+        
+        
+    def train_state_template(self):
+        return {
+            "index_patterns": [
+                "$classify_train_state*"
+            ],
+            "settings": {
+                "index.mapping.ignore_malformed": True,
+                "index": {
+                "number_of_shards": "5",
+                "elastiknn": True,
+                "auto_expand_replicas": "0-1",
+                "analysis": {
+                    "analyzer": {
+                        "whitespace_analyzer": {
+                            "filter": [
+                            "lowercase",
+                            "trim"
+                            ],
+                            "tokenizer": "my_whitespace"
+                        }
+                    },
+                    "tokenizer": {
+                        "my_whitespace": {
+                            "type": "whitespace",
+                            "max_token_length": "60"
+                        }
+                    }
+                }
+                },
+                "index.mapping.total_fields.limit": 99999999
+            },
+            "mappings": {
+                "dynamic_templates": [
+                    {
+                        "search_string_01": {
+                            "match": "id",
+                            "match_mapping_type": "long",
+                            "mapping": {
+                            "type": "long"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_05": {
+                            "match": "*site*",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_06": {
+                            "match": "*version*",
+                            "match_mapping_type": "long",
+                            "mapping": {
+                            "type": "long"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_07": {
+                            "match": "state",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_08": {
+                            "match": "*keyword*",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_09": {
+                            "match": "*_date",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "type": "date",
+                            "format": "yyyyMMddHHmmssSSS"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_10": {
+                            "match": "*_user",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+        
+        
+    def doc_template(self):
+        return {
+            "index_patterns": [
+                "$*_document_*"
+            ],
+            "settings": {
+                "index.mapping.ignore_malformed": True,
+                "index": {
+                "number_of_shards": "5",
+                "elastiknn": True,
+                "auto_expand_replicas": "0-1",
+                "analysis": {
+                    "analyzer": {
+                        "whitespace_analyzer": {
+                            "filter": [
+                            "lowercase",
+                            "trim"
+                            ],
+                            "tokenizer": "my_whitespace"
+                        }
+                    },
+                    "tokenizer": {
+                        "my_whitespace": {
+                            "type": "whitespace",
+                            "max_token_length": "60"
+                        }
+                    }
+                },
+                "similarity": {
+                    "pro_tfidf": {
+                    "type": "scripted",
+                    "script": {
+                        "source": "double norm = (doc.freq); return query.boost  *norm;"
+                        }
+                    }
+                }
+                },
+                "index.mapping.total_fields.limit": 99999999
+            },
+            "mappings": {
+                "dynamic_templates": [
+                    {
+                        "search_string_01": {
+                            "match": "id",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_02": {
+                            "match": "title",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_03": {
+                            "match": "content",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_04": {
+                            "match": "*No",
+                            "match_mapping_type": "long",
+                            "mapping": {
+                            "type": "long"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_05": {
+                            "match": "*version*",
+                            "match_mapping_type": "long",
+                            "mapping": {
+                            "type": "long"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_06": {
+                            "match": "*term*",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text",
+                            "similarity": "pro_tfidf"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_07": {
+                            "match": "*Date",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "type": "date",
+                            "format": "yyyyMMddHHmmssSSS"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_08": {
+                            "match": "*User",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+        
+        
+    def classify_template(self):
+        return {
+            "index_patterns": [
+                "$*_classify_*"
+            ],
+            "settings": {
+                "index.mapping.ignore_malformed": True,
+                "index": {
+                "number_of_shards": "5",
+                "auto_expand_replicas": "0-1",
+                "analysis": {
+                    "analyzer": {
+                        "whitespace_analyzer": {
+                            "filter": [
+                            "lowercase",
+                            "trim"
+                            ],
+                            "tokenizer": "my_whitespace"
+                        }
+                    },
+                    "tokenizer": {
+                        "my_whitespace": {
+                            "type": "whitespace",
+                            "max_token_length": "60"
+                        }
+                    }
+                },
+                "similarity": {
+                    "pro_tfidf": {
+                    "type": "scripted",
+                    "script": {
+                        "source": "double norm = (doc.freq); return query.boost  *norm;"
+                    }
+                    }
+                }
+                },
+                "index.mapping.total_fields.limit": 99999999
+            },
+            "mappings": {
+                "dynamic_templates": [
+                    {
+                        "search_string_01": {
+                            "match": "id",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_02": {
+                            "match": "term",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_03": {
+                            "match": "*site*",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_04": {
+                            "match": "dm_*",
+                            "match_mapping_type": "double",
+                            "mapping": {
+                            "type": "float"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_05": {
+                            "match": "*No",
+                            "match_mapping_type": "long",
+                            "mapping": {
+                            "type": "long"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_06": {
+                            "match": "*version*",
+                            "match_mapping_type": "long",
+                            "mapping": {
+                            "type": "long"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_07": {
+                            "match": "*_date",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "type": "date",
+                            "format": "yyyyMMddHHmmssSSS"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+        
+    def rule_template(self):
+        return {
+            "index_patterns": [
+                "$*_rule_*"
+            ],
+            "settings": {
+                "index.mapping.ignore_malformed": True,
+                "index": {
+                "number_of_shards": "5",
+                "auto_expand_replicas": "0-1",
+                "analysis": {
+                    "analyzer": {
+                        "whitespace_analyzer": {
+                            "filter": [
+                            "lowercase",
+                            "trim"
+                            ],
+                            "tokenizer": "my_whitespace"
+                        },
+                        "pattern_analyzer" : {
+                            "filter" : [
+                                "lowercase"
+                            ],
+                            "tokenizer" : "my_pattern"
+                        }
+                    },
+                    "tokenizer": {
+                        "my_whitespace": {
+                            "type": "whitespace",
+                            "max_token_length": "60"
+                        },
+                        "my_pattern" : {
+                            "pattern" : [
+                                ",",
+                                "whitespace"
+                            ],
+                            "type" : "pattern"
+                        }
+                    }
+                },
+                "similarity": {
+                    "pro_tfidf": {
+                    "type": "scripted",
+                    "script": {
+                        "source": "double norm = (doc.freq); return query.boost  *norm;"
+                    }
+                    }
+                }
+                },
+                "index.mapping.total_fields.limit": 99999999
+            },
+            "mappings": {
+                "dynamic_templates": [
+                    {
+                        "search_string_01": {
+                            "match": "id",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_02": {
+                            "match": "rule",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "pattern_analyzer",
+                            "type": "text",
+                            "fields" : {
+                                    "keyword" : {
+                                    "type" : "text",
+                                    "analyzer" : "whitespace_analyzer"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "search_string_03": {
+                            "match": "*site*",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_04": {
+                            "match": "*term*",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text",
+                            "similarity": "pro_tfidf"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_05": {
+                            "match": "*No",
+                            "match_mapping_type": "long",
+                            "mapping": {
+                            "type": "long"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_06": {
+                            "match": "*version*",
+                            "match_mapping_type": "long",
+                            "mapping": {
+                            "type": "long"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_07": {
+                            "match": "*_date",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "type": "date",
+                            "format": "yyyyMMddHHmmssSSS"
+                            }
+                        }
+                    }
+                ]
             }
         }
 

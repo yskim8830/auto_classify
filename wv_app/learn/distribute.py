@@ -80,7 +80,7 @@ class dist(threading.Thread):
                 
                 #Question 데이터를 개발 -> 운영으로 변경 한다.
                 results = []
-                indexNames = [index.question, index.intent, index.model]
+                indexNames = [index.question, index.classify, index.rule]
                 for idxName in indexNames:
                     results.append(runIndexDevToSvc(idxName))
                 
@@ -94,8 +94,8 @@ class dist(threading.Thread):
                         "source" : "ctx._source.service = 'n'"
                     }
                 }
-                es.updateAllData('@prochat_learning_log',learning_query_string1)
-                es.refresh('@prochat_learning_log')
+                es.updateAllData('@proclassify_learning_log',learning_query_string1)
+                es.refresh('@proclassify_learning_log')
                 learning_query_string2 = {
                     "query": {
                         "query_string": {
@@ -105,7 +105,7 @@ class dist(threading.Thread):
                         "source" : "ctx._source.service = 'y'"
                     }
                 }
-                es.updateAllData('@prochat_learning_log',learning_query_string2)
+                es.updateAllData('@proclassify_learning_log',learning_query_string2)
                 #alias 변경
                 for prdMAlias,prdMIndex,bckMIndex in results:
                     es.changeAlias(prdMAlias,prdMIndex,bckMIndex)

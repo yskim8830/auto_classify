@@ -26,23 +26,25 @@ class question():
             self.mecab = Mecab(dicpath=self.mecab_dic_path+'/mecab-ko-dic') # 사전 저장 경로에 자신이 mecab-ko-dic를 저장한 위치를 적는다. (default: "/usr/local/lib/mecab/dic/mecab-ko-dic") https://lsjsj92.tistory.com/612
         else:
             self.mecab = Mecab()
-    def word2vec_question(self, question):
+    def word2vec_question(self, question, question_title):
         starttime = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
         es_urls = self.searchip.split(':')
         #검색엔진에 연결한다.
         es = elastic_util(es_urls[0], es_urls[1])
         
         question_idx = index.als_idx + index.question + str(self.site_no)
-        #intent_idx = index.als_idx + index.intent + str(self.site_no)
-        model_idx = index.als_idx + index.model + str(self.site_no)
+        #intent_idx = index.als_idx + index.document + str(self.site_no)
+        model_idx = index.als_idx + index.classify + str(self.site_no)
         #개발 일 경우 version >-1 이상이고 version -1 일 경우 운영
         if int(self.version) > -1:
             question_idx = index.dev_idx + index.question + str(self.site_no)
-            #intent_idx = index.dev_idx + index.intent + str(self.site_no)
-            model_idx = index.dev_idx + index.model + str(self.site_no)
+            #intent_idx = index.dev_idx + index.document + str(self.site_no)
+            model_idx = index.dev_idx + index.classify + str(self.site_no)
         
         #질의어의 벡터 평균을 뽑는다.
+            
         r_question = getWordStringList(self.mecab, string_util.filterSentence(question.lower()), 'EC,JX,ETN')
+        
         """
         #1.aggregations 방식
         aggr_body = es.question_aggr_query_to_vector(self.version, ' '.join(r_question))
@@ -58,6 +60,13 @@ class question():
         """
         #2.mean_vector 방식
         weights = np.ones(len(r_question))
+        #제목을 추가할경우 가중치를 주고 append 한다.
+        if question_title != None:
+            r_question_title = getWordStringList(self.mecab, string_util.filterSentence(question_title.lower()), 'EC,JX,ETN')
+            r_question.extend(r_question_title)
+            title_weight = np.ones(len(r_question_title))*1.1
+            weights = np.append(weights, title_weight)
+
         mean = np.zeros(100, np.float32)
         total_weight = 0
         for idx, key in enumerate(r_question):
@@ -79,9 +88,11 @@ class question():
             total_results = es.search(question_idx,knn_body)
             results = []
             for idx, rst in enumerate(total_results):
-                rst['reliability'] = "{:.2f}%".format(rst['_score'])
-                results.append(rst)
-                #results.append({"categoryNo" : rst['_source']['categoryNo'], "categoryNm" : rst['_source']['categoryNm'], "fullItem" : rst['_source']['fullItem'], "score" : rst['_score'], "reliability" : "{:.2f}%".format(rst['_score'])})
+                # results.append(rst)
+                results.append({"categoryNo" : rst['_source']['categoryNo'], "categoryNm" : rst['_source']['categoryNm']
+                        , "fullItem" : rst['_source']['fullItem'], "score" : rst['_score'], "reliability" : "{:.2f}%".format(rst['_score'])})
+            #results = result_category(total_results,self.size)
+            
             endtime = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
             runtime = (datetime.strptime(endtime, '%Y%m%d%H%M%S%f')-datetime.strptime(starttime, '%Y%m%d%H%M%S%f')).total_seconds()
             total_results = {"result" : results, "runtime" : runtime}
@@ -111,13 +122,13 @@ class vec_dic_question():
         #검색엔진에 연결한다.
         es = elastic_util(es_urls[0], es_urls[1])
         question_idx = index.als_idx + index.question + str(self.site_no)
-        #intent_idx = index.als_idx + index.intent + str(self.site_no)
-        #model_idx = index.als_idx + index.model + str(self.site_no)
+        #intent_idx = index.als_idx + index.document + str(self.site_no)
+        #model_idx = index.als_idx + index.classify + str(self.site_no)
         #개발 일 경우 version >-1 이상이고 version -1 일 경우 운영
         if int(self.version) > -1:
             question_idx = index.dev_idx + index.question + str(self.site_no)
-            #intent_idx = index.dev_idx + index.intent + str(self.site_no)
-            #model_idx = index.dev_idx + index.model + str(self.site_no)
+            #intent_idx = index.dev_idx + index.document + str(self.site_no)
+            #model_idx = index.dev_idx + index.classify + str(self.site_no)
         r_question = getWordStringList(self.mecab, question, 'EC,JX,ETN')
         
         query_float = self.model.wv.get_mean_vector(r_question)
@@ -137,3 +148,18 @@ def getWordStringList(mec, sentence, stopTag):
         if str(stopTag).find(word[1]) == -1:
             result.append(word[0])
     return result
+
+#not use
+def result_category(total_results,size):
+    results = []
+    results_count = []
+    for idx, rst in enumerate(total_results):
+        # results.append(rst)
+        if(rst['_source']['categoryNo'] != 0):
+            if(results_count.count(rst['_source']['categoryNo']) == 0):
+                results_count.append(rst['_source']['categoryNo'])
+                results.append({"categoryNo" : rst['_source']['categoryNo'], "categoryNm" : rst['_source']['categoryNm']
+                                , "fullItem" : rst['_source']['fullItem'], "score" : rst['_score'], "reliability" : "{:.2f}%".format(rst['_score'])})
+        if len(results_count) == size:
+            break
+    return results

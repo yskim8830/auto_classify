@@ -75,12 +75,13 @@ class classify(APIView):
     def get(self , request):
         site_no = request.query_params.get('siteNo')
         question = request.query_params.get('query')
+        question_title = request.query_params.get('query_title')
         searchip = request.query_params.get('esURl')
         version = request.query_params.get('version')
         mecab_dic_path = request.query_params.get('mecabDicPath')
         size = request.query_params.get('size')
         w2v_query = w2v_question.question(site_no, searchip, version, mecab_dic_path, size)
-        result_answer = w2v_query.word2vec_question(question)
+        result_answer = w2v_query.word2vec_question(question,question_title)
         
         return Response(result_answer)
     
@@ -88,12 +89,13 @@ class classify(APIView):
         data = json.loads(request.body) #파라미터 로드
         site_no = str(data['siteNo'])
         question = str(data['query'])
+        question_title = str(data['query_title'])
         searchip = str(data['esURl'])
         version = str(data['version'])
         mecab_dic_path = str(data['mecabDicPath'])
         size = str(data['size'])
         w2v_query = w2v_question.question(site_no, searchip, version, mecab_dic_path, size)
-        result_answer = w2v_query.word2vec_question(question)
+        result_answer = w2v_query.word2vec_question(question,question_title)
         return Response(result_answer)
 #모델에 직접 질의
 class classify2(APIView):

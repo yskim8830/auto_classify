@@ -43,8 +43,9 @@ class learn(threading.Thread):
         version = run_util.isRunning(es,site_no)
         modify_date = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
         
-        ruleCount = 0
-        dataCount = 0
+        intentCount = 0
+        questionCount = 0
+        dialogCount = 0
         
         if version > -1:
             logger.debug("[trainToDev] model not running : "+str(site_no))
@@ -89,7 +90,7 @@ class learn(threading.Thread):
                                 }
                             }
                         }
-                category = es.search_srcoll('@proclassify_classify_category', cate_body)
+                category = es.search_srcoll('@prochat_category', cate_body)
                 
                 if userdefine.get(str(site_no)):
                     #사용자 사전 export
@@ -103,8 +104,7 @@ class learn(threading.Thread):
                 #룰(패턴) 정보 저장
                 devPattern = []
                 patternMapList = es.search_srcoll('@proclassify_entity_dic',query_string)
-                ruleCount = len(patternMapList)
-                logger.info("[trainToDev] pattern to dev start [ site : "+str(site_no) +" /  pattern count : "+str(ruleCount)+" ] ")
+                logger.info("[trainToDev] pattern to dev start [ site : "+str(site_no) +" /  pattern count : "+str(len(patternMapList))+" ] ")
                 
                 for pattern in patternMapList:
                     pattern = pattern['_source']
@@ -150,23 +150,38 @@ class learn(threading.Thread):
                 # 사전 저장 경로에 자신이 mecab-ko-dic를 저장한 위치를 적는다. (default: "/usr/local/lib/mecab/dic/mecab-ko-dic") https://lsjsj92.tistory.com/612        
                 m = Mecab(dicpath=os.path.join(mecab_dic_path, 'mecab-ko-dic')) 
                 
+                #문서(인텐트)
+                intentNameMap = dict()
+                categoryMap = dict()
+                intentMapList = es.search_srcoll('@proclassify_classify_data',query_string)
+                intentCount = len(intentMapList)
+                logger.info("[trainToDev] intent to dev start [ site : "+str(site_no) +" /  intent count : "+str(intentCount)+" ] ")
+                devIntent = []
                 questionList = []
-                #문서
-                dataMapList = es.search_srcoll('@proclassify_classify_data',query_string)
-                dataCount = len(dataMapList)
-                logger.info("[trainToDev] data to dev start [ site : "+str(site_no) +" /  data count : "+str(dataCount)+" ] ")
-                devQuestion = []
-                for dataMap in dataMapList:
-                    dataMap = dataMap['_source']
+                for intent in intentMapList:
+                    intent = intent['_source']
+                    id = str(intent['dataNo'])
+                    #dialogNm = str(intent['dialogNm'])
+                    intentNameMap[id] = dialogNm
+                    categoryMap[id] = str(intent['categoryNo'])
                     body = {}
                     _source = {}
                     
-                    body['_index'] = index.dev_idx + index.question + str(site_no)
+                    body['_index'] = index.dev_idx + index.document + str(site_no)
                     body['_action'] = 'index'
-                    body['_id'] = str(site_no)+'_'+str(new_version)+'_'+str(dataMap['dataNo'])
-                    full_contents = str(dataMap['title']).lower() + str(dataMap['content']).lower()
-                    sentence = string_util.filterSentence(full_contents)
+                    body['_id'] = str(site_no)+'_'+str(new_version)+'_'+id
+                    _source['dataNo'] = id
+                    _source['title'] = intent['title']
+                    _source['content'] = intent['content']
+                    _source['siteNo'] = str(site_no)
+                    _source['categoryNo'] = intent['categoryNo']
+                    _source['desc'] = intent['desc']
+                    _source['version'] = new_version
+                    _source['keywords'] = str(intent['keywords']).replace(',',' ')
+                    
+                    sentence = string_util.filterSentence(dialogNm.lower())
                     morphList = getWordStringList(m, sentence, 'EC,JX,ETN')
+                    
                     #불용어 제거 stopwords
                     sList = []
                     for morph in morphList:
@@ -174,8 +189,9 @@ class learn(threading.Thread):
                             if morph not in stopwords[str(site_no)]:
                                 sList.append(morph)
                         else:
-                            sList.append(morph)    
+                            sList.append(morph)
                     orgTerm = ' '.join(sList)
+                    orgTermCnt = len(sList)
                     
                     #동의어 처리
                     reList = []
@@ -189,17 +205,85 @@ class learn(threading.Thread):
                             reList.append(morph)
                     synonymTerm = ' '.join(reList)
                     
-                    _source['dataNo']  = dataMap['dataNo']
+                    #questionList.append(synonymTerm)
+                    questionList.append(reList)
+                    if(orgTerm != synonymTerm):
+                        #questionList.append(orgTerm)
+                        questionList.append(sList)
+                        
+                    _source['term'] = orgTerm
+                    _source['term_syn'] = synonymTerm
+                    _source['termNo'] = orgTermCnt
+                    
+                    body['_source'] = _source
+                    devIntent.append(body)
+                    
+                try:
+                    es.bulk(devIntent)
+                except Exception as e:
+                    logger.error("[trainToDev] template index not install : "+ e)
+                logger.info("[trainToDev] intent to dev end [ site : "+str(site_no) +" ]")
+                
+                #질의 question
+                questionMapList = es.search_srcoll('@prochat_dialog_question',query_string)
+                logger.info("[trainToDev] question to dev start [ site : "+str(site_no) +" /  question count : "+str(len(questionMapList))+" ] ")
+                devQuestion = []
+                for question in questionMapList:
+                    question = question['_source']
+                    body = {}
+                    _source = {}
+                    
+                    id = str(question['dialogNo'])
+                    sentence = string_util.filterSentence(str(question['question']).lower())
+                    morphList = getWordStringList(m, sentence, 'EC,JX,ETN')
+                    #불용어 제거 stopwords
+                    sList = []
+                    for morph in morphList:
+                        if stopwords.get(str(site_no)):
+                            if morph not in stopwords[str(site_no)]:
+                                sList.append(morph)
+                        else:
+                            sList.append(morph)    
+                    orgTerm = ' '.join(sList)
+                    orgTermCnt = len(sList)
+                    
+                    #동의어 처리
+                    reList = []
+                    for morph in morphList:
+                        if synonyms.get(str(site_no)):
+                            if morph in synonyms[str(site_no)]: 
+                                reList.append(synonyms[str(site_no)][morph])
+                            else:
+                                reList.append(morph)
+                        else:
+                            reList.append(morph)
+                    synonymTerm = ' '.join(reList)
+                    
+                    dialogNm = ''
+                    if id in intentNameMap:
+                        dialogNm = intentNameMap[id]
+                    
+                    categoryNo = '0'
+                    if id in categoryMap:
+                        categoryNo = categoryMap[id]
+                    
+                    body['_index'] = index.dev_idx + index.question + str(site_no)
+                    body['_action'] = 'index'
+                    body['_id'] = str(site_no)+'_'+str(new_version)+'_'+str(question['questionNo'])
+                    
+                    _source['questionNo']  = question['questionNo']
+                    _source['question']  = question['question']
                     _source['version']  = new_version
                     _source['siteNo']  = site_no
-                    _source['title']  = dataMap['title']
-                    _source['content']  = dataMap['content']
-                    _source['categoryNo']  = dataMap['categoryNo']
-                    category_info = (item for item in category if item['_id'] == str(dataMap['categoryNo']))
+                    _source['dialogNo']  = question['dialogNo']
+                    _source['dialogNm']  = dialogNm
+                    _source['categoryNo']  = int(categoryNo)
+                    category_info = (item for item in category if item['_id'] == str(categoryNo))
                     row_category = next(category_info, False)
                     if row_category != False:
                         _source['fullItem']  = row_category['_source']['fullItem']
                         _source['categoryNm']  = row_category['_source']['categoryNm']
+                    _source['termNo']  = orgTermCnt
                     _source['term']  = orgTerm
                     _source['term_syn']  = synonymTerm
                     _source['keywords']  = string_util.specialReplace(sentence).replace(' ','')
@@ -250,6 +334,39 @@ class learn(threading.Thread):
                 logger.info("[trainToDev] question to dev search vector list start [ site : "+str(site_no) +" ]")
                 
                 totalDevQuestion = []
+                #Intent를 totalDevQuestion에 넣는다.
+                if intentCount > 0:
+                    for intent_row in devIntent:
+                        _source = {}
+                        dIntent = intent_row['_source']
+                        intent_row['_index'] = index.dev_idx + index.question + str(site_no)
+                        intent_row['_action'] = 'index'
+                        intent_row['_id'] = str(site_no)+'_'+str(new_version)+'_D_'+str(dIntent['dialogNo'])
+                        _source['question']  = dIntent['dialogNm']
+                        _source['keywords']  =  dIntent['dialogNm'].replace(' ','')
+                        _source['questionNo']  = -1
+                        _source['dialogNo']  = dIntent['dialogNo']
+                        _source['dialogNm']  = dIntent['dialogNm']
+                        _source['version']  = new_version
+                        _source['siteNo']  = site_no
+                        _source['categoryNo']  = dIntent['categoryNo']
+                        category_info = (item for item in category if item['_id'] == str(dIntent['categoryNo']))
+                        row_category = next(category_info, False)
+                        if row_category != False:
+                            _source['fullItem']  = row_category['_source']['fullItem']
+                            _source['categoryNm']  = row_category['_source']['categoryNm']
+                        _source['term_syn']  = dIntent['term_syn']
+                        _source['terms']  = dIntent['term_syn'].replace(' ','')
+                        #morphList = m.morphs(dIntent['term_syn'])
+                        if dIntent['term_syn'] != '':
+                            # morphList = getWordStringList(m, dIntent['term_syn'], 'EC,JX,ETN')
+                            # _source['question_vec']  = model.wv.get_mean_vector(morphList)
+                            _source['question_vec']  = model.wv.get_mean_vector(str(dIntent['term_syn']).split(' '))
+                        _source['term']  = dIntent['term']
+                        _source['termNo']  = ''
+                        intent_row['_source'] = _source
+                        totalDevQuestion.append(intent_row)
+                        
                 # vector를 devQuestion에 넣는다.    
                 if len(devQuestion) > 0:
                     for question_row in devQuestion:
@@ -263,7 +380,7 @@ class learn(threading.Thread):
                             
                         question_row['_source'] = source
                         totalDevQuestion.append(question_row)
-                logger.info("complete set vector")
+                    logger.info("complete set vector")
                     
                 if len(totalDevQuestion) >0:   
                     try:
@@ -272,6 +389,8 @@ class learn(threading.Thread):
                         logger.error(e)
                 logger.info("[trainToDev] question to dev search vector list end [ site : "+str(site_no) +" /  count : "+str(len(totalDevQuestion))+" ]")
                 #end word2Vec
+                #모델 개수를 count 한다. (학습상관없음)
+                dialogCount = es.countBySearch('@prochat_dialog_model', query_string)
                 
                 #학습이 완료 되었으므로 버전을 올린다.
                 version = new_version
@@ -303,15 +422,16 @@ class learn(threading.Thread):
                 log_data['runEndDate'] = end_date
                 log_data['createDate'] = modify_date
                 log_data['modifyDate'] = modify_date
-                log_data['ruleCnt'] = ruleCount
-                log_data['dataCnt'] = dataCount
+                log_data['intentCnt'] = intentCount
+                log_data['dialogCnt'] = dialogCount
+                log_data['questionCnt'] = questionCount
                 log_data['order'] = 0
                 if error_msg != '':
                     log_data['state'] = 'error'
                     log_data['message'] = error_msg
                 else:
                     log_data['state'] = 'success'
-                es.insertData('@proclassify_learning_log', id, log_data)
+                es.insertData('@prochat_learning_log', id, log_data)
                 es.close()
         elif version == -1:
             status = "[trainToDev] model running : "+str(site_no) +" [check $train_state index check]"

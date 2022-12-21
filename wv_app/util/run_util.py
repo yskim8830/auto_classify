@@ -26,18 +26,27 @@ def isRunning(es, site_no):
 
 def createQuestionIndex(es, site_no):
     #use word2vec
-    if not es.existIndex(index.dev_idx + index.model + str(site_no)):
-        es.createindex(index.dev_idx + index.model + str(site_no), '')
-        es.createindex(index.svc_idx + index.model + str(site_no) + "_0", '')
-        es.createindex(index.svc_idx + index.model + str(site_no) + "_1", '')
-        es.createAlias(index.als_idx + index.model + str(site_no) ,index.svc_idx + index.model + str(site_no) + "_1")
+    if not es.existIndex(index.dev_idx + index.classify + str(site_no)):
+        es.createtemplate('proclassify_template01', es.classify_template())
+        es.createindex(index.dev_idx + index.classify + str(site_no), '')
+        es.createindex(index.svc_idx + index.classify + str(site_no) + "_0", '')
+        es.createindex(index.svc_idx + index.classify + str(site_no) + "_1", '')
+        es.createAlias(index.als_idx + index.classify + str(site_no) ,index.svc_idx + index.classify + str(site_no) + "_1")
 
-    if not es.existIndex(index.dev_idx + index.intent + str(site_no)):
-        es.createindex(index.dev_idx + index.intent + str(site_no), '')
-        es.createindex(index.svc_idx + index.intent + str(site_no) + "_0", '')
-        es.createindex(index.svc_idx + index.intent + str(site_no) + "_1", '')
-        es.createAlias(index.als_idx + index.intent + str(site_no) ,index.svc_idx + index.intent + str(site_no) + "_1")
-    
+    if not es.existIndex(index.dev_idx + index.rule + str(site_no)):
+        es.createtemplate('proclassify_template02', es.rule_template())
+        es.createindex(index.dev_idx + index.rule + str(site_no), '')
+        es.createindex(index.svc_idx + index.rule + str(site_no) + "_0", '')
+        es.createindex(index.svc_idx + index.rule + str(site_no) + "_1", '')
+        es.createAlias(index.als_idx + index.rule + str(site_no) ,index.svc_idx + index.rule + str(site_no) + "_1")
+    """  
+    if not es.existIndex(index.dev_idx + index.document + str(site_no)):
+        es.createtemplate('proclassify_template03', es.doc_template())
+        es.createindex(index.dev_idx + index.document + str(site_no), '')
+        es.createindex(index.svc_idx + index.document + str(site_no) + "_0", '')
+        es.createindex(index.svc_idx + index.document + str(site_no) + "_1", '')
+        es.createAlias(index.als_idx + index.document + str(site_no) ,index.svc_idx + index.document + str(site_no) + "_1")
+    """  
     try:
         if not es.existIndex(index.dev_idx + index.question + str(site_no)):
             es.createindex(index.dev_idx + index.question + str(site_no), es.question_index_template())
@@ -64,7 +73,7 @@ def save_dict(data):
     #검색엔진에 연결한다.
     es = elastic_util(es_urls[0], es_urls[1])
     #ES 사전 정보 파일로 저장
-    dicList = es.search_srcoll('@prochat_dic','')
+    dicList = es.search_srcoll('@proclassify_dic','')
     dic_path = data['dicPath']
     result = string_util.save_dictionary(dic_path,dicList)
     es.close()
