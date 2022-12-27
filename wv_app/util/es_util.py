@@ -497,7 +497,7 @@ class elastic_util:
                         }
                     },
                     {
-                        "search_string_05": {
+                        "search_string_02": {
                             "match": "*site*",
                             "match_mapping_type": "string",
                             "mapping": {
@@ -507,7 +507,7 @@ class elastic_util:
                         }
                     },
                     {
-                        "search_string_06": {
+                        "search_string_03": {
                             "match": "*version*",
                             "match_mapping_type": "long",
                             "mapping": {
@@ -516,7 +516,7 @@ class elastic_util:
                         }
                     },
                     {
-                        "search_string_07": {
+                        "search_string_04": {
                             "match": "state",
                             "match_mapping_type": "string",
                             "mapping": {
@@ -526,7 +526,7 @@ class elastic_util:
                         }
                     },
                     {
-                        "search_string_08": {
+                        "search_string_05": {
                             "match": "*keyword*",
                             "match_mapping_type": "string",
                             "mapping": {
@@ -536,7 +536,7 @@ class elastic_util:
                         }
                     },
                     {
-                        "search_string_09": {
+                        "search_string_06": {
                             "match": "*_date",
                             "match_mapping_type": "string",
                             "mapping": {
@@ -546,8 +546,28 @@ class elastic_util:
                         }
                     },
                     {
-                        "search_string_10": {
+                        "search_string_07": {
                             "match": "*_user",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_07": {
+                            "match": "status",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_08": {
+                            "match": "worker_id",
                             "match_mapping_type": "string",
                             "mapping": {
                             "analyzer": "whitespace_analyzer",

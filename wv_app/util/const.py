@@ -1,3 +1,4 @@
+import configparser
 
 class const():
     def __init__(self):
@@ -9,6 +10,11 @@ class const():
         self._document = 'document_'
         self._rule = 'rule_'
         self._question = 'question_'
+        
+        properties = configparser.ConfigParser()
+        properties.read('proclassify.ini')
+        self._proclassify_path = properties["CONFIG"]["proclassify_path"]
+        self._proclassify_dic_path = properties["CONFIG"]["proclassify_dic_path"]
     
     @property    
     def train_state(self):
@@ -34,3 +40,9 @@ class const():
     @property    
     def question(self):
         return self._question
+    @property    
+    def proclassify_path(self):
+        return self._proclassify_path
+    @property    
+    def proclassify_dic_path(self):
+        return self._proclassify_dic_path

@@ -1,9 +1,6 @@
 import os
 import logging
 import platform
-import threading
-import ctypes
-import numpy as np
 from datetime import datetime
 from konlpy.tag import Mecab
 from gensim.models import Word2Vec
@@ -13,7 +10,6 @@ from ..util import string_util
 from ..util.const import const
 from ..util.file_util import dic
 from ..util.es_util import elastic_util
-
 import time
 
 logger = logging.getLogger('my')
@@ -23,64 +19,56 @@ class learn():
         self.name = t_name
         
     def run(self, data):
-        
-        #debug = data['debug']
-        #threading.Thread.getName(self)
-        try: 
-            while True: 
-                print('running ')
-                time.sleep(10)
-        finally: 
-            print('ended') 
+        try:
+            error_msg = ""
+            modify_date = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
+            #debug = data['debug']
+            es_urls = str(data['esUrl']).split(':')
+            #검색엔진에 연결한다.
+            es = elastic_util(es_urls[0], es_urls[1])
             
-        es_urls = str(data['esUrl']).split(':')
-        #검색엔진에 연결한다.
-        es = elastic_util(es_urls[0], es_urls[1])
-        
-        site_no = data['siteNo']
-        dic_path = data['dicPath']
-        mecab_dic_path = '/usr/local/lib/mecab/dic'
-        if data.get('mecabDicPath') != None :
-            mecab_dic_path = data['mecabDicPath']
-        userId = data['userId']
-        
-        error_msg = ""
-        es.createtemplate('proclassify_template00', es.train_state_template())
-        es.createindex(index.train_state,'') #$train_state 존재여부 확인 후 생성
-        
-        #현재 사이트가 학습 중 인지 확인한다.
-        version = run_util.isRunning(es,site_no)
-        modify_date = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
-        
-        ruleCount = 0
-        dataCount = 0
-        
-        if version > -1:
-            logger.debug("[trainToDev] model not running : "+str(site_no))
-            # Index 생성여부를 확인하고 해당 데이터를 만든다.
-            run_util.createQuestionIndex(es,site_no)
-            # $train_state 상태를 업데이트 한다.
-            mapData = {}
-            mapData['id'] = site_no
-            mapData['version'] = version ##학습중인 상태를 나타냄. -1
-            mapData['siteNo'] = site_no
-            mapData['state'] = 'y'
-            mapData['modify_date'] = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
-            es.insertData(index.train_state, site_no, mapData)
+            site_no = data['siteNo']
+            dic_path = index.proclassify_dic_path
+            if data.get('dicPath') != None :
+                dic_path = data['dicPath']
+            mecab_dic_path = '/usr/local/lib/mecab/dic'
+            if data.get('mecabDicPath') != None :
+                mecab_dic_path = data['mecabDicPath']
+            userId = data['userId']
             
-            #ES 사전 정보 파일로 저장
-            dicList = es.search_srcoll('@proclassify_dic','')
-            result = string_util.save_dictionary(dic_path,dicList)
-            if not result:
-                return {'result' : 'fail'}
-            #사전파일 가져오기
-            dics = dic(dic_path)
-            stopwords = dics.stopword()
-            synonyms = dics.synonym()
-            userdefine = dics.compound()
-            
-            try:
-                #start_date = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
+            # es.createtemplate('proclassify_template00', es.train_state_template())
+            # es.createindex(index.train_state,'') #$train_state 존재여부 확인 후 생성
+            #현재 사이트가 학습 중 인지 확인한다. (worker가 템플릿 존재 여부를 확인 하고 sleep)
+            wait = 5
+            logger.info("[trainToDev] Initial Wait "+ str(wait) +" Seconds..")
+            time.sleep(wait)
+            version = run_util.isRunning(es,site_no)
+            ruleCount = 0
+            dataCount = 0
+            if version > -1:
+                logger.info("[trainToDev] model not running : "+str(site_no))
+                # Index 생성여부를 확인하고 해당 데이터를 만든다.
+                run_util.createQuestionIndex(es,site_no)
+                
+                # $train_state 상태를 업데이트 한다.
+                mapData = {}
+                mapData['version'] = version ##학습중인 상태를 나타냄. -1
+                mapData['siteNo'] = site_no
+                mapData['state'] = 'y'
+                mapData['status'] = '02' #전처리
+                es.updateData(index.train_state, site_no, mapData)
+                
+                #ES 사전 정보 파일로 저장
+                dicList = es.search_srcoll('@proclassify_dic','')
+                result = string_util.save_dictionary(dic_path,dicList)
+                if not result:
+                    error_msg = '사전 정보가 올바르게 저장되지 않았습니다.'
+                    raise Exception(error_msg)
+                #사전파일 가져오기
+                dics = dic(dic_path)
+                stopwords = dics.stopword()
+                synonyms = dics.synonym()
+                userdefine = dics.compound()
                 new_version = version + 1 #업데이트 되는 버전 정보
                 query_string = {
                     "query": {
@@ -89,7 +77,6 @@ class learn():
                         }
                     }
                 }
-                
                 #카테고리정보 로드
                 cate_body = {
                             "query": {
@@ -110,6 +97,10 @@ class learn():
                         file_util.run_lnx_shell(mecab_dic_path)
                 
                 #룰(패턴) 정보 저장
+                mapData = {} # $train_state 상태를 업데이트 한다.
+                mapData['status'] = '03' #학습데이터 준비 (사전 정제작업 등)
+                es.updateData(index.train_state, site_no, mapData)
+                
                 devPattern = []
                 patternMapList = es.search_srcoll('@proclassify_entity_dic',query_string)
                 ruleCount = len(patternMapList)
@@ -150,17 +141,14 @@ class learn():
                     _source['term'] = ' '.join(reList)
                     body['_source'] = _source
                     devPattern.append(body)
-                try:
                     es.bulk(devPattern)
-                except Exception as e:
-                    logger.error(e)
                 logger.info("[trainToDev] pattern to dev end [ site : "+str(site_no) +" ] ")
                 
                 # 사전 저장 경로에 자신이 mecab-ko-dic를 저장한 위치를 적는다. (default: "/usr/local/lib/mecab/dic/mecab-ko-dic") https://lsjsj92.tistory.com/612        
                 m = Mecab(dicpath=os.path.join(mecab_dic_path, 'mecab-ko-dic')) 
                 
-                questionList = []
                 #문서
+                questionList = []
                 dataMapList = es.search_srcoll('@proclassify_classify_data',query_string)
                 dataCount = len(dataMapList)
                 logger.info("[trainToDev] data to dev start [ site : "+str(site_no) +" /  data count : "+str(dataCount)+" ] ")
@@ -226,6 +214,10 @@ class learn():
                     devQuestion.append(body)
 
                 #start word2Vec
+                mapData = {} # $train_state 상태를 업데이트 한다.
+                mapData['status'] = '04' #word2vec 시작
+                es.updateData(index.train_state, site_no, mapData)
+                
                 logger.info("[word2vecTrain] start [ siteNo :"+str(site_no)+" / size : "+str(len(questionList))+"]")
                 model = Word2Vec(sentences=questionList, vector_size=100, window=2, min_count=1, workers=10, sg=0)
                 model_name = 'word2vec_'+str(site_no)
@@ -250,10 +242,7 @@ class learn():
                         body['_source'] = _source
                         dev_vector.append(body)
                 if len(dev_vector) > 0:
-                    try:
-                        es.bulk(dev_vector)
-                    except Exception as e:
-                        logger.error(e)
+                    es.bulk(dev_vector)
                 logger.info("[word2vecTrain] end")
                 #학습결과를 ES 인덱스에 넣는다.
                 logger.info("[trainToDev] question to dev search vector list start [ site : "+str(site_no) +" ]")
@@ -275,85 +264,61 @@ class learn():
                 logger.info("complete set vector")
                     
                 if len(totalDevQuestion) >0:   
-                    try:
-                        es.bulk(totalDevQuestion)
-                    except Exception as e:
-                        logger.error(e)
+                    es.bulk(totalDevQuestion)
                 logger.info("[trainToDev] question to dev search vector list end [ site : "+str(site_no) +" /  count : "+str(len(totalDevQuestion))+" ]")
                 #end word2Vec
                 
                 #학습이 완료 되었으므로 버전을 올린다.
                 version = new_version
-                
-            except Exception as e:
-                error_msg = str(e)
-                logger.error(e)
-            finally:
-                end_date = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
-                #$train_state 상태를 변경한다.
-                mapData['version'] = version
-                mapData['state'] = 'n'
-                mapData['modify_date'] = end_date
-                es.updateData(index.train_state, site_no, mapData)
-                
-                
-                #learning log에 학습결과를 적재한다.
-                log_data = {}
-                id = str(site_no) + '_' + str(version)
-                log_data['learningLogNo'] = id
-                log_data['version'] = version
-                log_data['siteNo'] = site_no
-                log_data['service'] = 'n'
-                log_data['createUser'] = userId
-                log_data['modifyUser'] = userId
-                runtime = (datetime.strptime(end_date, '%Y%m%d%H%M%S%f')-datetime.strptime(modify_date, '%Y%m%d%H%M%S%f')).total_seconds()
-                log_data['runtime'] = runtime
-                log_data['runStartDate'] = modify_date
-                log_data['runEndDate'] = end_date
-                log_data['createDate'] = modify_date
-                log_data['modifyDate'] = modify_date
-                log_data['ruleCnt'] = ruleCount
-                log_data['dataCnt'] = dataCount
-                log_data['order'] = 0
-                if error_msg != '':
-                    log_data['state'] = 'error'
-                    log_data['message'] = error_msg
-                else:
-                    log_data['state'] = 'success'
-                    log_data['message'] = 'success'
-                es.insertData('@proclassify_learning_log', id, log_data)
-                es.close()
-        elif version == -1:
-            status = "[trainToDev] model running : "+str(site_no) +" [check $train_state index check]"
-            logger.info(status)
-            return {'result' : 'fail', 'error_msg' : status}
+            elif version == -1:
+                status = "[trainToDev] model running : "+str(site_no) +" [check $train_state index check]"
+                logger.info(status)
+                return {'result' : 'fail', 'error_msg' : status}
+        except Exception as e:
+            error_msg = str(e)
+            logger.error(e)
+            return {'code' : '499', 'message' : error_msg}
+        finally:
+            end_date = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
+            #$train_state 상태를 변경한다.
+            mapData['version'] = version
+            mapData['state'] = 'n'
+            mapData['worker_id'] = ''
+            if error_msg != '':
+                mapData['status'] = '00' #준비상태로 되돌림
+            else : 
+                mapData['status'] = '05' #학습완료
+            mapData['modify_date'] = end_date
+            es.updateData(index.train_state, site_no, mapData)
+            
+            #learning log에 학습결과를 적재한다.
+            log_data = {}
+            id = str(site_no) + '_' + str(version)  + '_' + str(end_date)
+            log_data['learningLogNo'] = id
+            log_data['version'] = version
+            log_data['siteNo'] = site_no
+            log_data['service'] = 'n'
+            log_data['createUser'] = userId
+            log_data['modifyUser'] = userId
+            runtime = (datetime.strptime(end_date, '%Y%m%d%H%M%S%f')-datetime.strptime(modify_date, '%Y%m%d%H%M%S%f')).total_seconds()
+            log_data['runtime'] = runtime
+            log_data['runStartDate'] = modify_date
+            log_data['runEndDate'] = end_date
+            log_data['createDate'] = modify_date
+            log_data['modifyDate'] = modify_date
+            log_data['ruleCnt'] = ruleCount
+            log_data['dataCnt'] = dataCount
+            log_data['order'] = 0
+            if error_msg != '':
+                log_data['state'] = 'error'
+                log_data['message'] = error_msg
+            else:
+                log_data['state'] = 'success'
+                log_data['message'] = 'success'
+            es.insertData('@proclassify_learning_log', id, log_data)
+            es.close()
         return {'result' : 'success', 'version' : version}
 
- 
-def get_id(self): 
-    # returns id of the respective thread 
-    if hasattr(self, '_thread_id'): 
-        return self._thread_id 
-    for id, thread in threading._active.items(): 
-        if thread is self: 
-            return id
-def raise_exception(id): 
-    thread_id = id
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 
-        ctypes.py_object(SystemExit)) 
-    if res > 1: 
-        ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0) 
-        print('Exception raise failure')
-
-def getThread(t_name):
-    for thread in threading.enumerate():
-        if(t_name == thread.name):
-            print('***', thread.name)
-            if hasattr(thread, '_thread_id'): 
-                ret =  raise_exception(thread._thread_id)
-                thread.join()
-                return ret
-            
 def getWordStringList(mec, sentence, stopTag):
     result = []
     morphs = mec.pos(sentence)

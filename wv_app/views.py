@@ -16,32 +16,37 @@ from .tasks import *
 class training_start(APIView):
     def post(self , request):
         data = json.loads(request.body) #파라미터 로드
-        result_dic = {} #결과 set
         #질의를 embedding 하여 저장
-        result_dic = start_learning.delay(data)
-        return Response({"worker_id" : result_dic.id})
+        results = start_learning.delay(data) #celery start
+        result = {}
+        try: 
+            result = {'code' : '200', 'message' : '학습 시작', 'worker_id' : results.id}
+            data['worker_id'] = result['worker_id']
+            data['state'] = 'n'
+            data['status'] = '01' #started
+            run_util.init_train_state(data)
+        except Exception as e:
+            result = {'code' : '499', 'message' : e, 'worker_id' : ''}
+        return Response({'status' : result})
     
 class training_stop(APIView):
     def post(self , request):
         data = json.loads(request.body) #파라미터 로드
         result = celery_stop(str(data['worker_id']))
-        result_dic = {'status' : result}
-        return Response(result_dic)
+        
+        return Response({'status' : result})
     
 class training_status(APIView):
     def post(self , request):
         data = json.loads(request.body) #파라미터 로드
-        result_dic = {} #결과 set
-        result_dic = celery_state(str(data['worker_id']))
-        #result_dic = run_util.status(data)
-        return Response(result_dic)
+        result = celery_state(str(data['worker_id']))
+        return Response({'status' : result})
 
 class training_clear(APIView):
     def post(self , request):
         data = json.loads(request.body) #파라미터 로드
-        result_dic = {} #결과 set
-        result_dic = run_util.recoverySite(data)
-        return Response(result_dic)
+        result = run_util.recoverySite(data)
+        return Response({'status' : result})
 
 class distribute_service(APIView):
     def post(self , request):

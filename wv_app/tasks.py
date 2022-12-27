@@ -6,15 +6,17 @@ from celery.contrib.abortable import AbortableAsyncResult
 from .learn import learning
 
 logger = logging.getLogger('my')
+#celery worker function
+
 @shared_task(track_started=True)
 def start_learning(data):
     siteNo = str(data['siteNo'])
     run = learning.learn('siteNo_'+siteNo)
     return run.run(data)
-
+   
 def celery_state(task_id):
-    task = AsyncResult(id=str(task_id))
-    return {'state':task.state}
+  task = AsyncResult(id=str(task_id))
+  return {'state':task.state, 'worker_id' : task_id}
 
 def celery_stop(task_id):
   try: 
@@ -28,4 +30,5 @@ def celery_stop(task_id):
     logger.info("task kill")
     return {'code' : '200', 'message' : '중단 성공'}
   except Exception as e:
-    return {'code' : '499', 'message' : e}
+    return {'code' : '499', 'message' : str(e)}
+  
