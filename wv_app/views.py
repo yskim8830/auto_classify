@@ -5,44 +5,35 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .util import run_util
-from .learn import learning
+#from .learn import learning
 from .learn import distribute
 from .learn import w2v_question
 
 from django.http import Http404
 
+from .tasks import *
 
 class training_start(APIView):
     def post(self , request):
         data = json.loads(request.body) #파라미터 로드
-        siteNo = str(data['siteNo'])
         result_dic = {} #결과 set
         #질의를 embedding 하여 저장
-        run = learning.learn('siteNo_'+siteNo)
-        result_dic = run.learningBERT(data)
-        return Response(result_dic)
+        result_dic = start_learning.delay(data)
+        return Response({"worker_id" : result_dic.id})
     
 class training_stop(APIView):
     def post(self , request):
         data = json.loads(request.body) #파라미터 로드
-        siteNo = str(data['siteNo'])
-        result_dic = {} #결과 set
-        run = learning.learn('siteNo_'+siteNo)
-        #print('stop main')
-        result = run.raise_exception()
-        if result == True :
-            run.join()
-            result_dic = {'result' :  'success'}
-        else :
-            result_dic = {'result' : 'fail', 'msg' : 'learning is not working'}
-            
+        result = celery_stop(str(data['worker_id']))
+        result_dic = {'status' : result}
         return Response(result_dic)
     
 class training_status(APIView):
     def post(self , request):
         data = json.loads(request.body) #파라미터 로드
         result_dic = {} #결과 set
-        result_dic = run_util.status(data)
+        result_dic = celery_state(str(data['worker_id']))
+        #result_dic = run_util.status(data)
         return Response(result_dic)
 
 class training_clear(APIView):
@@ -73,28 +64,30 @@ class distribute_dictionary(APIView):
 #엘라스틱서치
 class classify(APIView):
     def get(self , request):
-        site_no = request.query_params.get('siteNo')
+        site_id = request.query_params.get('site')
         question = request.query_params.get('query')
         question_title = request.query_params.get('query_title')
         searchip = request.query_params.get('esURl')
         version = request.query_params.get('version')
         mecab_dic_path = request.query_params.get('mecabDicPath')
         size = request.query_params.get('size')
-        w2v_query = w2v_question.question(site_no, searchip, version, mecab_dic_path, size)
+        threshold = request.query_params.get('threshold')
+        w2v_query = w2v_question.question(site_id, searchip, version, mecab_dic_path, size, threshold)
         result_answer = w2v_query.word2vec_question(question,question_title)
         
         return Response(result_answer)
     
     def post(self , request):
         data = json.loads(request.body) #파라미터 로드
-        site_no = str(data['siteNo'])
+        site_id = str(data['site'])
         question = str(data['query'])
         question_title = str(data['query_title'])
         searchip = str(data['esURl'])
         version = str(data['version'])
         mecab_dic_path = str(data['mecabDicPath'])
         size = str(data['size'])
-        w2v_query = w2v_question.question(site_no, searchip, version, mecab_dic_path, size)
+        threshold = str(data['threshold'])
+        w2v_query = w2v_question.question(site_id, searchip, version, mecab_dic_path, size, threshold)
         result_answer = w2v_query.word2vec_question(question,question_title)
         return Response(result_answer)
 #모델에 직접 질의

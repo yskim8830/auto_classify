@@ -14,16 +14,25 @@ from ..util.const import const
 from ..util.file_util import dic
 from ..util.es_util import elastic_util
 
+import time
+
 logger = logging.getLogger('my')
 index = const()
-class learn(threading.Thread):
-    def __init__(self,name):
-        threading.Thread.__init__(self)
-        self.name = name #Thread Name
+class learn():
+    def __init__(self,t_name):
+        self.name = t_name
         
-    def learningBERT(self, data):
+    def run(self, data):
+        
         #debug = data['debug']
-        
+        #threading.Thread.getName(self)
+        try: 
+            while True: 
+                print('running ')
+                time.sleep(10)
+        finally: 
+            print('ended') 
+            
         es_urls = str(data['esUrl']).split(':')
         #검색엔진에 연결한다.
         es = elastic_util(es_urls[0], es_urls[1])
@@ -76,7 +85,7 @@ class learn(threading.Thread):
                 query_string = {
                     "query": {
                         "query_string": {
-                            "query": "siteNo:" + str(site_no) + " AND useYn:y"
+                            "query": "siteNo:" + str(site_no)
                         }
                     }
                 }
@@ -311,6 +320,7 @@ class learn(threading.Thread):
                     log_data['message'] = error_msg
                 else:
                     log_data['state'] = 'success'
+                    log_data['message'] = 'success'
                 es.insertData('@proclassify_learning_log', id, log_data)
                 es.close()
         elif version == -1:
@@ -318,22 +328,31 @@ class learn(threading.Thread):
             logger.info(status)
             return {'result' : 'fail', 'error_msg' : status}
         return {'result' : 'success', 'version' : version}
-    
-    def get_id(self): 
-        # returns id of the respective thread 
-        if hasattr(self, '_thread_id'): 
-            return self._thread_id 
-        for id, thread in threading._active.items(): 
-            if thread is self: 
-                return id
-   
-    def raise_exception(self): 
-        thread_id = self.get_id()
-        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 
-            ctypes.py_object(SystemExit)) 
-        if res > 1: 
-            ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0) 
-            print('Exception raise failure')
+
+ 
+def get_id(self): 
+    # returns id of the respective thread 
+    if hasattr(self, '_thread_id'): 
+        return self._thread_id 
+    for id, thread in threading._active.items(): 
+        if thread is self: 
+            return id
+def raise_exception(id): 
+    thread_id = id
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 
+        ctypes.py_object(SystemExit)) 
+    if res > 1: 
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0) 
+        print('Exception raise failure')
+
+def getThread(t_name):
+    for thread in threading.enumerate():
+        if(t_name == thread.name):
+            print('***', thread.name)
+            if hasattr(thread, '_thread_id'): 
+                ret =  raise_exception(thread._thread_id)
+                thread.join()
+                return ret
             
 def getWordStringList(mec, sentence, stopTag):
     result = []

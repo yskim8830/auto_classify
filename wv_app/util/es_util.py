@@ -37,8 +37,6 @@ class elastic_util:
         else:
             return self.es.indices.create(index=idx, body=mapping)
     
-    
-    
     #deleteindex
     def deleteindex(self, idx):
         return self.es.indices.delete(index=idx, ignore=[400, 404])
@@ -389,15 +387,7 @@ class elastic_util:
                     },
                     "question_vec": {
                         "type": "elastiknn_dense_float_vector",
-                        #1.BERT
-                        # "elastiknn": {
-                        #     "dims": 768,
-                        #     "model": "lsh",
-                        #     "similarity": "angular",
-                        #     "L": 99,
-                        #     "k": 1
-                        # }
-                        #2.WORD2VEC
+                        #WORD2VEC
                         "elastiknn": {
                             "dims": 100,
                             "model": "lsh",
