@@ -53,9 +53,6 @@ class question():
         
         self.site_no = -1
         siteList = es.search('@proclassify_site',query_string)
-        
-        
-        return {}
         try:
             if len(siteList) == 0:
                 result_code = "203"
@@ -95,13 +92,14 @@ class question():
             """
             #3-3.mean_vector 방식
             weights = np.ones(len(r_question))
+            """
             #제목을 추가할경우 가중치를 주고 append 한다.
             if question_title != None:
                 r_question_title = getWordStringList(self.mecab, string_util.filterSentence(question_title.lower()), 'EC,JX,ETN')
                 r_question.extend(r_question_title)
                 title_weight = np.ones(len(r_question_title))*1.1
                 weights = np.append(weights, title_weight)
-
+            """
             mean = np.zeros(100, np.float32)
             total_weight = 0
             for idx, key in enumerate(r_question):
