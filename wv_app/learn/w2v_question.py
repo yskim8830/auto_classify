@@ -13,19 +13,17 @@ index = const()
 
 #1. elasticsearch model index search
 class question():
-    def __init__(self,site_id,searchip,version,mecab_dic_path,size,threshold):
+    def __init__(self,site_id,searchip,version,size,threshold):
         self.site_id = site_id
         self.searchip = searchip
         self.version = version
-        self.mecab_dic_path = mecab_dic_path
+        
         if size != None:
             self.size = size
         else:
             self.size = 5
-        if mecab_dic_path != None:
-            self.mecab = Mecab(dicpath=self.mecab_dic_path+'/mecab-ko-dic') # 사전 저장 경로에 자신이 mecab-ko-dic를 저장한 위치를 적는다. (default: "/usr/local/lib/mecab/dic/mecab-ko-dic") https://lsjsj92.tistory.com/612
-        else:
-            self.mecab = Mecab()
+
+        self.mecab = Mecab()
         if threshold != None:
             self.threshold = threshold
         else:
@@ -52,8 +50,12 @@ class question():
                 }
             }
         }
+        
         self.site_no = -1
         siteList = es.search('@proclassify_site',query_string)
+        
+        
+        return {}
         try:
             if len(siteList) == 0:
                 result_code = "203"

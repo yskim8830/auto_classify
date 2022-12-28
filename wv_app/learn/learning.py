@@ -161,7 +161,8 @@ class learn():
                     body['_index'] = index.dev_idx + index.question + str(site_no)
                     body['_action'] = 'index'
                     body['_id'] = str(site_no)+'_'+str(new_version)+'_'+str(dataMap['dataNo'])
-                    full_contents = str(dataMap['title']).lower() + str(dataMap['content']).lower()
+                    # full_contents = str(dataMap['title']).lower() + str(dataMap['content']).lower()
+                    full_contents = str(dataMap['document']).lower()
                     sentence = string_util.filterSentence(full_contents)
                     morphList = getWordStringList(m, sentence, 'EC,JX,ETN')
                     #불용어 제거 stopwords
@@ -189,8 +190,9 @@ class learn():
                     _source['dataNo']  = dataMap['dataNo']
                     _source['version']  = new_version
                     _source['siteNo']  = site_no
-                    _source['title']  = dataMap['title']
-                    _source['content']  = dataMap['content']
+                    # _source['title']  = dataMap['title']
+                    # _source['content']  = dataMap['content']
+                    _source['document']  = dataMap['document']
                     _source['categoryNo']  = dataMap['categoryNo']
                     category_info = (item for item in category if item['_id'] == str(dataMap['categoryNo']))
                     row_category = next(category_info, False)
@@ -283,7 +285,7 @@ class learn():
             #$train_state 상태를 변경한다.
             mapData['version'] = version
             mapData['state'] = 'n'
-            mapData['worker_id'] = ''
+            # mapData['worker_id'] = ''
             if error_msg != '':
                 mapData['status'] = '00' #준비상태로 되돌림
             else : 
@@ -315,6 +317,7 @@ class learn():
             else:
                 log_data['state'] = 'success'
                 log_data['message'] = 'success'
+                
             es.insertData('@proclassify_learning_log', id, log_data)
             es.close()
         return {'result' : 'success', 'version' : version}

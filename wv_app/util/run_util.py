@@ -59,17 +59,24 @@ def createQuestionIndex(es, site_no):
     except Exception as e:
         logger.error("elastiknn plugin not installed.", e)
         
-def status(data):
+def get_worker_site(data):
     es_urls = str(data['esUrl']).split(':')
     site_no = data['siteNo']
     #검색엔진에 연결한다.
     es = elastic_util(es_urls[0], es_urls[1])
-    version = isRunning(es, site_no)
+    body = {
+        "query": {
+            "query_string": {
+                "query": "siteNo:" + str(site_no) + " "
+            }
+        }
+    }
+    isLearnig = es.search(index.train_state,body)
     es.close()
-    if version > -1 :
-        return {'result' : 0, 'msg' : 'site '+ str(site_no) +' is no running'}
-    else :
-        return {'result' : 1, 'msg' : 'site '+ str(site_no) + ' is running'}
+    if len(isLearnig) > 0:
+        siteInfo = isLearnig[0]['_source']
+        return siteInfo
+    return ''
 
 def save_dict(data):
     es_urls = str(data['esUrl']).split(':')
