@@ -20,7 +20,8 @@ class learn():
         
     def run(self, data):
         try:
-            error_msg = ""
+            result_code = '200'
+            error_msg = ''
             modify_date = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
             es_urls = str(data['esUrl']).split(':')
             #검색엔진에 연결한다.
@@ -61,6 +62,7 @@ class learn():
                 dicList = es.search_srcoll('@proclassify_dic','')
                 result = string_util.save_dictionary(dic_path,dicList)
                 if not result:
+                    result_code = '320'
                     error_msg = '사전 정보가 올바르게 저장되지 않았습니다.'
                     raise Exception(error_msg)
                 #사전파일 가져오기
@@ -84,21 +86,34 @@ class learn():
                                 }
                             }
                         }
-                category = es.search_srcoll('@proclassify_classify_category', cate_body)
+                try:
+                    category = es.search_srcoll('@proclassify_classify_category', cate_body)
+                except:
+                    result_code = '330'
+                    error_msg = '카테고리 정보 로드 중 오류 발생'
+                    raise Exception(error_msg)
                 
                 if userdefine.get(str(site_no)):
-                    #사용자 사전 export
-                    file_util.export_user_dic(mecab_dic_path,userdefine[str(site_no)])
-                    #사용자 사전 적용 실행
-                    if platform.system() == 'Windows':
-                        file_util.run_power_shell(mecab_dic_path)
-                    else:
-                        file_util.run_lnx_shell(mecab_dic_path)
+                    try:
+                        #사용자 사전 export
+                        file_util.export_user_dic(mecab_dic_path,userdefine[str(site_no)])
+                        #사용자 사전 적용 실행
+                        if platform.system() == 'Windows':
+                            file_util.run_power_shell(mecab_dic_path)
+                        else:
+                            file_util.run_lnx_shell(mecab_dic_path)
+                    except:
+                        result_code = '340'
+                        error_msg = 'Mecab 로드 중 오류 발생'
+                        raise Exception(error_msg)
+                # 사전 저장 경로에 자신이 mecab-ko-dic를 저장한 위치를 적는다. (default: "/usr/local/lib/mecab/dic/mecab-ko-dic") https://lsjsj92.tistory.com/612        
+                m = Mecab(dicpath=os.path.join(mecab_dic_path, 'mecab-ko-dic')) 
                 
                 #룰(패턴) 정보 저장
                 mapData = {} # $train_state 상태를 업데이트 한다.
                 mapData['status'] = '03' #학습데이터 준비 (사전 정제작업 등)
                 es.updateData(index.train_state, site_no, mapData)
+                
                 
                 devPattern = []
                 patternMapList = es.search_srcoll('@proclassify_entity_dic',query_string)
@@ -142,9 +157,6 @@ class learn():
                     devPattern.append(body)
                     es.bulk(devPattern)
                 logger.info("[trainToDev] pattern to dev end [ site : "+str(site_no) +" ] ")
-                
-                # 사전 저장 경로에 자신이 mecab-ko-dic를 저장한 위치를 적는다. (default: "/usr/local/lib/mecab/dic/mecab-ko-dic") https://lsjsj92.tistory.com/612        
-                m = Mecab(dicpath=os.path.join(mecab_dic_path, 'mecab-ko-dic')) 
                 
                 #문서
                 questionList = []
@@ -276,9 +288,10 @@ class learn():
                 logger.info(status)
                 return {'result' : 'fail', 'error_msg' : status}
         except Exception as e:
+            result_code = '999'
             error_msg = str(e)
             logger.error(e)
-            return {'code' : '499', 'message' : error_msg}
+            return {'status' : {'code' : result_code, 'message' : error_msg} , 'version' : version}
         finally:
             end_date = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
             #$train_state 상태를 변경한다.
@@ -310,6 +323,7 @@ class learn():
             log_data['ruleCnt'] = ruleCount
             log_data['dataCnt'] = dataCount
             log_data['order'] = 0
+            log_data['result_code'] = result_code
             if error_msg != '':
                 log_data['state'] = 'error'
                 log_data['message'] = error_msg
@@ -319,7 +333,7 @@ class learn():
                 
             es.insertData('@proclassify_learning_log', id, log_data)
             es.close()
-        return {'result' : 'success', 'version' : version}
+        return {'status' : {'code' : result_code, 'message' : error_msg} , 'version' : version}
 
 def getWordStringList(mec, sentence, stopTag):
     result = []

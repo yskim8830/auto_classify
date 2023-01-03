@@ -12,6 +12,7 @@ class dist():
         
     def run(self, data):
         try:
+            result_code = '200'
             error_msg = ""
             es_urls = str(data['esUrl']).split(':')
             #검색엔진에 연결한다.
@@ -102,13 +103,16 @@ class dist():
                 for prdMAlias,prdMIndex,bckMIndex in results:
                     es.changeAlias(prdMAlias,prdMIndex,bckMIndex)
             else:
-                status = "[runIndexDevToSvc] model running : "+str(site_no) +" [check $train_state index check]"
+                status = "모델이 수행중 입니다. : "+str(site_no) +" $classify_train_state 인덱스를 확인 하세요."
                 logger.info(status)
-                return {'code' : '499', 'message' : error_msg}
+                result_code = '710'
+                return {'status' : {'code' : result_code, 'message' : status} , 'version' : version}
         except Exception as e:
+            result_code = '999'
             error_msg = str(e)
             logger.error(e)
-            return {'result' : 'fail', 'msg' : error_msg}
+            return {'status' : {'code' : result_code, 'message' : error_msg} , 'version' : version}
+        
         finally:
             logger.info("[devToSvc] end]")
             if version > -1:
@@ -119,4 +123,4 @@ class dist():
                 mapData['modify_date'] = end_date
                 es.updateData(index.train_state, site_no, mapData)
                 es.close()
-        return {'result' : 'success', 'version' : version}
+        return {'status' : {'code' : result_code, 'message' : error_msg} , 'version' : version}

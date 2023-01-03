@@ -22,13 +22,13 @@ def celery_stop(task_id):
   try: 
     task = AsyncResult(id=str(task_id))
     if task.state == 'ABORTED': 
-        return {'code' : '401', 'message' : '이미 중단된 작업 입니다.'}
+        return {'code' : '410', 'message' : '이미 중단된 작업 입니다.'}
     elif task.state == 'PENDING':
-        return {'code' : '402', 'message' : '실행중인 작업이 아닙니다.'}
+        return {'code' : '420', 'message' : '실행중인 작업이 아닙니다.'}
     AbortableAsyncResult(task_id).abort()
     AsyncResult(id=task_id).revoke(terminate=True, signal="SIGKILL")
     logger.info("task kill")
-    return {'code' : '200', 'message' : '중단 성공'}
+    return {'code' : '200', 'message' : '성공'}
   except Exception as e:
-    return {'code' : '499', 'message' : str(e)}
+    return {'code' : '999', 'message' : str(e)}
   
