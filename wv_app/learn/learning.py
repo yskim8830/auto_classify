@@ -22,7 +22,6 @@ class learn():
         try:
             error_msg = ""
             modify_date = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
-            #debug = data['debug']
             es_urls = str(data['esUrl']).split(':')
             #검색엔진에 연결한다.
             es = elastic_util(es_urls[0], es_urls[1])

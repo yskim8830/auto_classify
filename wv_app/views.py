@@ -67,7 +67,7 @@ class distribute_service(APIView):
         result_dic = {} #결과 set
         # dev 학습 데이터를 서비스로 전송
         send = distribute.dist('siteNo_'+siteNo)
-        result_dic = send.distributeBERT(data)
+        result_dic = send.run(data)
         return Response(result_dic,content_type=c_type)
 
 class distribute_dictionary(APIView):
@@ -81,30 +81,20 @@ class distribute_dictionary(APIView):
 #엘라스틱서치
 class classify(APIView):
     def get(self , request):
-        site_id = request.query_params.get('site')
+        w2v_query = w2v_question.question(request.query_params.dict())
         question = request.query_params.get('query')
         question_title = request.query_params.get('query_title')
-        searchip = request.query_params.get('searchIp')
-        version = request.query_params.get('version')
-        size = request.query_params.get('size')
-        threshold = request.query_params.get('threshold')
-        w2v_query = w2v_question.question(site_id, searchip, version, size, threshold)
         result_answer = w2v_query.word2vec_question(question,question_title)
         
         return Response(result_answer,content_type=c_type)
     
     def post(self , request):
         data = json.loads(request.body) #파라미터 로드
-        site_id = str(data['site'])
+        w2v_query = w2v_question.question(data)
         question = str(data['query'])
         question_title = None
         if data.get('question_title') != None :
             question_title = str(data['query_title'])
-        searchip = str(data['searchIp'])
-        version = str(data['version'])
-        size = str(data['size'])
-        threshold = str(data['threshold'])
-        w2v_query = w2v_question.question(site_id, searchip, version, size, threshold)
         result_answer = w2v_query.word2vec_question(question,question_title)
         return Response(result_answer,content_type=c_type)
 #모델에 직접 질의

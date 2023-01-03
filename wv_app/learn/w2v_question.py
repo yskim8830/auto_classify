@@ -13,21 +13,19 @@ index = const()
 
 #1. elasticsearch model index search
 class question():
-    def __init__(self,site_id,searchip,version,size,threshold):
-        self.site_id = site_id
-        self.searchip = searchip
-        self.version = version
+    def __init__(self,data):
+        self.site_id = data['site']
+        self.searchip = data['searchIp']
+        self.version = str(data['version'])
         
-        if size != None:
-            self.size = size
-        else:
-            self.size = 5
+        self.size = 5
+        if data.get('size') != None :
+            self.size = data['size']
 
         self.mecab = Mecab()
-        if threshold != None:
-            self.threshold = threshold
-        else:
-            self.threshold = 0.00
+        self.threshold = 0.00
+        if data.get('threshold') != None :
+            self.threshold = data['threshold']
             
     def word2vec_question(self, question, question_title):
         total_results = {}
@@ -132,7 +130,7 @@ class question():
                         raise Exception
 
                 result_code = "200"
-                result_message = "success"
+                result_message = "성공"
                 analysisResult_resultType = "matched"
                 analysisResult_matchedType = "classify"
             else:
@@ -142,7 +140,7 @@ class question():
             logger.error(e)
             if result_code == '':
                 result_code = "299"
-                result_message = "Error."
+                result_message = "Error. " + str(e)
         finally:
             endtime = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
             runtime = (datetime.strptime(endtime, '%Y%m%d%H%M%S%f')-datetime.strptime(starttime, '%Y%m%d%H%M%S%f')).total_seconds()
