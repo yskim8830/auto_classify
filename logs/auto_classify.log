@@ -1,4 +1,39 @@
-2023-01-02 15:37:43,804 [ERROR] django.request: Internal Server Error: /api/classify
+2023-01-05 13:56:32,625 [INFO] my: [trainToDev] Initial Wait 5 Seconds..
+2023-01-05 13:56:37,636 [INFO] my: [trainToDev] model not running : 2
+2023-01-05 13:56:38,782 [INFO] my: [trainToDev] pattern to dev start [ site : 2 /  pattern count : 0 ] 
+2023-01-05 13:56:38,782 [INFO] my: [trainToDev] pattern to dev end [ site : 2 ] 
+2023-01-05 13:56:38,858 [INFO] my: [trainToDev] data to dev start [ site : 2 /  data count : 1000 ] 
+2023-01-05 13:56:40,590 [INFO] my: [word2vecTrain] start [ siteNo :2 / size : 1000]
+2023-01-05 13:56:47,659 [INFO] my: [word2vecTrain] end
+2023-01-05 13:56:47,660 [INFO] my: [trainToDev] question to dev search vector list start [ site : 2 ]
+2023-01-05 13:56:49,202 [INFO] my: complete set vector
+2023-01-05 13:56:49,851 [INFO] my: [trainToDev] question to dev search vector list end [ site : 2 /  count : 1000 ]
+2023-01-05 13:56:49,861 [INFO] my: [trainToDev] model running success.
+2023-01-05 13:57:23,392 [INFO] my: [devToSvc] start [ userId : promanager / siteNo :2 / version :1]
+2023-01-05 13:57:23,499 [INFO] my: [runIndexDevToSvc] start [ indexName : question_ / siteNo : 2 / version : 1 ]
+2023-01-05 13:57:23,694 [INFO] my: [runIndexDevToSvc] end [ total : 1000]
+2023-01-05 13:57:23,695 [INFO] my: [runIndexDevToSvc] start [ indexName : classify_ / siteNo : 2 / version : 1 ]
+2023-01-05 13:57:24,749 [INFO] my: [runIndexDevToSvc] end [ total : 8820]
+2023-01-05 13:57:24,750 [INFO] my: [runIndexDevToSvc] start [ indexName : rule_ / siteNo : 2 / version : 1 ]
+2023-01-05 13:57:24,761 [INFO] my: [runIndexDevToSvc] end [ total : 0]
+2023-01-05 13:57:24,876 [INFO] my: [devToSvc] end]
+2023-01-05 13:57:38,487 [INFO] my: [devToSvc] start [ userId : promanager / siteNo :2 / version :3]
+2023-01-05 13:57:38,494 [INFO] my: [runIndexDevToSvc] start [ indexName : question_ / siteNo : 2 / version : 3 ]
+2023-01-05 13:57:38,529 [INFO] my: [runIndexDevToSvc] end [ total : 0]
+2023-01-05 13:57:38,530 [INFO] my: [runIndexDevToSvc] start [ indexName : classify_ / siteNo : 2 / version : 3 ]
+2023-01-05 13:57:38,816 [INFO] my: [runIndexDevToSvc] end [ total : 0]
+2023-01-05 13:57:38,816 [INFO] my: [runIndexDevToSvc] start [ indexName : rule_ / siteNo : 2 / version : 3 ]
+2023-01-05 13:57:38,827 [INFO] my: [runIndexDevToSvc] end [ total : 0]
+2023-01-05 13:57:38,939 [INFO] my: [devToSvc] end]
+2023-01-05 13:57:46,013 [INFO] my: [devToSvc] start [ userId : promanager / siteNo :2 / version :1]
+2023-01-05 13:57:46,019 [INFO] my: [runIndexDevToSvc] start [ indexName : question_ / siteNo : 2 / version : 1 ]
+2023-01-05 13:57:46,219 [INFO] my: [runIndexDevToSvc] end [ total : 1000]
+2023-01-05 13:57:46,219 [INFO] my: [runIndexDevToSvc] start [ indexName : classify_ / siteNo : 2 / version : 1 ]
+2023-01-05 13:57:47,503 [INFO] my: [runIndexDevToSvc] end [ total : 8820]
+2023-01-05 13:57:47,503 [INFO] my: [runIndexDevToSvc] start [ indexName : rule_ / siteNo : 2 / version : 1 ]
+2023-01-05 13:57:47,515 [INFO] my: [runIndexDevToSvc] end [ total : 0]
+2023-01-05 13:57:47,635 [INFO] my: [devToSvc] end]
+2023-01-05 14:15:44,607 [ERROR] django.request: Internal Server Error: /api/training/status
 Traceback (most recent call last):
   File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/core/handlers/exception.py", line 55, in inner
     response = get_response(request)
@@ -16,33 +51,100 @@ Traceback (most recent call last):
     raise exc
   File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 506, in dispatch
     response = handler(request, *args, **kwargs)
-  File "/home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/views.py", line 84, in get
-    w2v_query = w2v_question.question(request.query_params.dict())
-  File "/home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/learn/w2v_question.py", line 18, in __init__
-    self.searchip = data['searchip']
-KeyError: 'searchip'
-2023-01-02 15:37:58,231 [INFO] django.utils.autoreload: /home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/learn/w2v_question.py changed, reloading.
-2023-01-02 15:38:02,317 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
-2023-01-02 15:40:17,319 [ERROR] my: can only concatenate str (not "int") to str
-2023-01-02 15:40:19,845 [ERROR] my: can only concatenate str (not "int") to str
-2023-01-02 15:41:09,343 [INFO] django.utils.autoreload: /home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/learn/w2v_question.py changed, reloading.
-2023-01-02 15:41:13,392 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
-2023-01-02 15:41:22,808 [ERROR] my: can only concatenate str (not "int") to str
-2023-01-02 15:42:16,762 [ERROR] my: can only concatenate str (not "int") to str
-2023-01-02 15:42:31,838 [ERROR] my: can only concatenate str (not "int") to str
-2023-01-02 15:43:04,818 [ERROR] my: can only concatenate str (not "int") to str
-2023-01-02 15:43:05,998 [INFO] django.utils.autoreload: /home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/learn/w2v_question.py changed, reloading.
-2023-01-02 15:43:10,116 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
-2023-01-02 15:43:33,954 [INFO] django.utils.autoreload: /home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/learn/w2v_question.py changed, reloading.
-2023-01-02 15:43:38,276 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
-2023-01-03 10:05:29,805 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
-2023-01-03 10:05:47,969 [INFO] my: [devToSvc] start [ userId : promanager / siteNo :2 / version :1]
-2023-01-03 10:05:48,180 [INFO] my: [runIndexDevToSvc] start [ indexName : question_ / siteNo : 2 / version : 1 ]
-2023-01-03 10:05:48,729 [INFO] my: [runIndexDevToSvc] end [ total : 1000]
-2023-01-03 10:05:48,730 [INFO] my: [runIndexDevToSvc] start [ indexName : classify_ / siteNo : 2 / version : 1 ]
-2023-01-03 10:05:50,150 [INFO] my: [runIndexDevToSvc] end [ total : 8820]
-2023-01-03 10:05:50,151 [INFO] my: [runIndexDevToSvc] start [ indexName : rule_ / siteNo : 2 / version : 1 ]
-2023-01-03 10:05:50,164 [INFO] my: [runIndexDevToSvc] end [ total : 0]
-2023-01-03 10:05:50,409 [INFO] my: [devToSvc] end]
-2023-01-03 10:27:57,938 [INFO] django.utils.autoreload: /home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/learn/w2v_question.py changed, reloading.
-2023-01-03 10:28:01,880 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+  File "/home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/views.py", line 60, in post
+    worker = run_util.get_worker_site(data)
+  File "/home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/util/run_util.py", line 63, in get_worker_site
+    es_urls = str(data['esUrl']).split(':')
+KeyError: 'esUrl'
+2023-01-05 14:15:49,584 [ERROR] django.request: Internal Server Error: /api/training/status
+Traceback (most recent call last):
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/views/generic/base.py", line 103, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/views.py", line 60, in post
+    worker = run_util.get_worker_site(data)
+  File "/home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/util/run_util.py", line 63, in get_worker_site
+    es_urls = str(data['esUrl']).split(':')
+KeyError: 'esUrl'
+2023-01-05 14:15:54,484 [ERROR] django.request: Internal Server Error: /api/training/status
+Traceback (most recent call last):
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/views/generic/base.py", line 103, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/views.py", line 60, in post
+    worker = run_util.get_worker_site(data)
+  File "/home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/util/run_util.py", line 63, in get_worker_site
+    es_urls = str(data['esUrl']).split(':')
+KeyError: 'esUrl'
+2023-01-05 14:15:59,495 [ERROR] django.request: Internal Server Error: /api/training/status
+Traceback (most recent call last):
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/views/generic/base.py", line 103, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/views.py", line 60, in post
+    worker = run_util.get_worker_site(data)
+  File "/home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/util/run_util.py", line 63, in get_worker_site
+    es_urls = str(data['esUrl']).split(':')
+KeyError: 'esUrl'
+2023-01-05 14:16:04,534 [ERROR] django.request: Internal Server Error: /api/training/status
+Traceback (most recent call last):
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/django/views/generic/base.py", line 103, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "/home/tensor/anaconda3/envs/chat_service/lib/python3.8/site-packages/rest_framework/views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "/home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/views.py", line 60, in post
+    worker = run_util.get_worker_site(data)
+  File "/home/tensor/anaconda3/envs/chat_service/auto_classify/wv_app/util/run_util.py", line 63, in get_worker_site
+    es_urls = str(data['esUrl']).split(':')
+KeyError: 'esUrl'

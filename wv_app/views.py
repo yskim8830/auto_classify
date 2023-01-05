@@ -18,8 +18,8 @@ class training_start(APIView):
     def post(self , request):
         data = json.loads(request.body) #파라미터 로드
         #질의를 embedding 하여 저장
-        results = start_learning.delay(data) #celery start
         result = {}
+        results = start_learning.delay(data) #celery start
         try: 
             result = {'code' : '200', 'message' : '학습 시작', 'worker_id' : results.id}
             data['worker_id'] = result['worker_id']
@@ -28,6 +28,22 @@ class training_start(APIView):
             run_util.init_train_state(data)
         except Exception as e:
             result = {'code' : '499', 'message' : e, 'worker_id' : ''}
+        
+        """
+        try: 
+            result = {'code' : '200', 'message' : '학습 시작'}
+            param_data = {}
+            param_data['siteNo'] = data['siteNo']
+            param_data['userId'] = data['userId']
+            param_data['esUrl'] = data['esUrl']
+            param_data['state'] = 'n'
+            param_data['status'] = '01' #started
+            run_util.init_train_state(param_data)
+            learn_result = learning.learn('siteNo_'+str(data['siteNo']))
+            result = learn_result.run(data)
+        except Exception as e:
+            result = {'code' : '499', 'message' : e, 'worker_id' : ''}
+        """
         return Response({'status' : result},content_type=c_type)
     
 class training_stop(APIView):
@@ -51,7 +67,7 @@ class training_status(APIView):
             return Response({'status' : result, 'site_status' : worker_site, 'worker_status' : worker_status},content_type=c_type)
 
         else :
-            result = {'code' : '399', 'message' : '사이트 정보가 없습니다.'}    
+            result = {'code' : '510', 'message' : '사이트 정보가 없습니다.'}    
         return Response({'status' : result},content_type=c_type)
 
 class training_clear(APIView):

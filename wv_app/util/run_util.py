@@ -114,7 +114,7 @@ def recoverySite(data):
     except Exception as e:
         error_msg = str(e)
         logger.error(e)
-        return {'code' : '499', 'message' : error_msg}
+        return {'code' : '610', 'message' : error_msg}
     finally :
         es.close()
     return {'code' : '200', 'message' : '성공'}
@@ -144,11 +144,7 @@ def init_train_state(data):
         es.createtemplate('proclassify_template00', es.train_state_template())
         ret = es.createindex(index.train_state,'') #$train_state 존재여부 확인 후 생성
         data.pop('esUrl')
-        if ret.get('acknowledged') != None :
-            if ret['acknowledged'] :
-                update_train_state(es, data,'in')
-        else :
-            update_train_state(es, data,'up')
+        update_train_state(es, data,'in')
     except Exception as e:
         error_msg = str(e)
         logger.error(e)

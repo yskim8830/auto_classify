@@ -21,10 +21,14 @@ class dist():
             site_no = data['siteNo']
             userId = data['userId']
             version = int(data['version'])
-            
+            if version == 0:
+                result_code = '999'
+                error_msg = '학습된 데이터가 아닙니다.'
+                raise Exception(error_msg)
             #현재 사이트가 학습 중 인지 확인한다.
             if version == -1:
                 version = run_util.isRunning(es,site_no)
+                
             
             logger.info("[devToSvc] start [ userId : "+userId +" / siteNo :"+str(site_no)+" / version :"+str(version)+"]")
             
@@ -32,7 +36,7 @@ class dist():
                 # $train_state 상태를 업데이트 한다.
                 mapData = {}
                 mapData['id'] = site_no
-                mapData['version'] = version ##학습중인 상태를 나타냄. -1
+                mapData['version'] = version ##학습중인 상태를 나타냄.
                 mapData['siteNo'] = site_no
                 mapData['state'] = 'y'
                 mapData['status'] = '06' #배포중
@@ -92,7 +96,8 @@ class dist():
                 learning_query_string2 = {
                     "query": {
                         "query_string": {
-                            "query": "learningLogNo:" + str(site_no)+"_"+ str(version)
+                            "query": "siteNo:" + str(site_no)+" version:"+ str(version)+" state:success"
+                            , "default_operator": "and"
                         }
                     }, "script" : {
                         "source" : "ctx._source.service = 'y'"
@@ -123,4 +128,4 @@ class dist():
                 mapData['modify_date'] = end_date
                 es.updateData(index.train_state, site_no, mapData)
                 es.close()
-        return {'status' : {'code' : result_code, 'message' : error_msg} , 'version' : version}
+        return {'status' : {'code' : result_code, 'message' : '배포성공'} , 'version' : version}

@@ -173,14 +173,14 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'file': {
-            'level': 'INFO',
+            'level': 'DEBUG', 
             'encoding': 'utf-8',
             'filters': ['require_debug_false'],
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOG_FILE,
-            'maxBytes': 1024*1024*5,  # 5 MB
-            'backupCount': 5,
-            'formatter': 'standard',
+            'class': 'logging.handlers.TimedRotatingFileHandler', 
+            'filename': LOG_FILE, # 위에 선언한 파일 이름
+            'when': "midnight", # 매 자정마다
+            'formatter': 'standard', 
+            'backupCount':5,
         },
     },
     'loggers': {

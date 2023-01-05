@@ -88,9 +88,15 @@ class learn():
                         }
                 try:
                     category = es.search_srcoll('@proclassify_classify_category', cate_body)
+                    if len(category) == 0 :
+                        raise Exception(error_msg)
                 except:
-                    result_code = '330'
-                    error_msg = '카테고리 정보 로드 중 오류 발생'
+                    if len(category) == 0 :
+                        result_code = '299'
+                        error_msg = '학습 할 카테고리 정보가 없습니다.'
+                    else:
+                        result_code = '330'
+                        error_msg = '카테고리 정보 로드 중 오류 발생'
                     raise Exception(error_msg)
                 
                 if userdefine.get(str(site_no)):
@@ -288,6 +294,7 @@ class learn():
                 logger.info(status)
                 return {'result' : 'fail', 'error_msg' : status}
         except Exception as e:
+            version = -1
             result_code = '999'
             error_msg = str(e)
             logger.error(e)
@@ -307,11 +314,11 @@ class learn():
             
             #learning log에 학습결과를 적재한다.
             log_data = {}
-            id = str(site_no) + '_' + str(version)  + '_' + str(end_date)
+            id = str(site_no) + '_' + str(version) + '_' + str(end_date)
             log_data['learningLogNo'] = id
-            log_data['version'] = version
             log_data['siteNo'] = site_no
             log_data['service'] = 'n'
+            log_data['version'] = version
             log_data['createUser'] = userId
             log_data['modifyUser'] = userId
             runtime = (datetime.strptime(end_date, '%Y%m%d%H%M%S%f')-datetime.strptime(modify_date, '%Y%m%d%H%M%S%f')).total_seconds()
@@ -330,6 +337,8 @@ class learn():
             else:
                 log_data['state'] = 'success'
                 log_data['message'] = 'success'
+                error_msg = '학습 성공'
+                logger.info("[trainToDev] model running success.")
                 
             es.insertData('@proclassify_learning_log', id, log_data)
             es.close()

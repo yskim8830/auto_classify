@@ -53,7 +53,7 @@ class question():
         siteList = es.search('@proclassify_site',query_string)
         try:
             if len(siteList) == 0:
-                result_code = "203"
+                result_code = "810"
                 result_message = "사이트를 찾을 수 없습니다."
                 raise Exception
             
@@ -125,7 +125,7 @@ class question():
                             analysisResult_classifyResult.append({"categoryNo" : rst['_source']['categoryNo'], "categoryNm" : rst['_source']['categoryNm']
                                 , "fullItem" : rst['_source']['fullItem'], "score" : rst['_score'], "reliability" : str(reliability)+'%'})
                     except Exception as e:
-                        result_code = "202"
+                        result_code = "820"
                         result_message = "임계치(threshold) 값을 올바르게 입력해주세요."
                         raise Exception
 
@@ -134,12 +134,12 @@ class question():
                 analysisResult_resultType = "matched"
                 analysisResult_matchedType = "classify"
             else:
-                result_code = "201"
+                result_code = "830"
                 result_message = "No matching value found."
         except Exception as e:
             logger.error(e)
             if result_code == '':
-                result_code = "299"
+                result_code = "999"
                 result_message = "Error. " + str(e)
         finally:
             endtime = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
