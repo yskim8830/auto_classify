@@ -23,6 +23,8 @@ def isRunning(es, site_no):
                 version = int(siteInfo['version'])
             else :
                 version = 0
+        elif siteInfo['state'] == 'y' and siteInfo['status'] == '01':
+            version = int(siteInfo['version'])
     else:
         version = 0
     return version
@@ -60,23 +62,30 @@ def createQuestionIndex(es, site_no):
         logger.error("elastiknn plugin not installed.", e)
         
 def get_worker_site(data):
-    es_urls = str(data['esUrl']).split(':')
-    site_no = data['siteNo']
-    #검색엔진에 연결한다.
-    es = elastic_util(es_urls[0], es_urls[1])
-    body = {
-        "query": {
-            "query_string": {
-                "query": "siteNo:" + str(site_no) + " "
+    try:
+        es_urls = str(data['esUrl']).split(':')
+        site_no = data['siteNo']
+        #검색엔진에 연결한다.
+        es = elastic_util(es_urls[0], es_urls[1])
+        body = {
+            "query": {
+                "query_string": {
+                    "query": "siteNo:" + str(site_no) + " "
+                }
             }
         }
-    }
-    isLearnig = es.search(index.train_state,body)
-    es.close()
-    if len(isLearnig) > 0:
-        siteInfo = isLearnig[0]['_source']
-        return siteInfo
-    return ''
+        isLearnig = es.search(index.train_state,body)
+        es.close()
+        if len(isLearnig) > 0:
+            siteInfo = isLearnig[0]['_source']
+        else :
+            siteInfo = ''
+        es.close()
+    except Exception as e:
+        error_msg = str(e)
+        logger.error(e)
+        return {'status' : {'code' : '999', 'message' : error_msg }, 'siteInfo' : ''} 
+    return {'status' : {'code' : '200', 'message' : '성공'}, 'siteInfo' : siteInfo}
 
 def save_dict(data):
     es_urls = str(data['esUrl']).split(':')
@@ -144,7 +153,11 @@ def init_train_state(data):
         es.createtemplate('proclassify_template00', es.train_state_template())
         ret = es.createindex(index.train_state,'') #$train_state 존재여부 확인 후 생성
         data.pop('esUrl')
-        update_train_state(es, data,'in')
+        version = isRunning(es, str(data['siteNo']))
+        if version == 0:
+            update_train_state(es, data,'in')
+        else :
+            update_train_state(es, data,'up')
     except Exception as e:
         error_msg = str(e)
         logger.error(e)

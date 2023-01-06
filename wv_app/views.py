@@ -1,15 +1,10 @@
 import json
-import time
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 from .util import run_util
 #from .learn import learning
 from .learn import distribute
 from .learn import w2v_question
-
-from django.http import Http404
 
 from .tasks import *
 
@@ -23,7 +18,7 @@ class training_start(APIView):
         try: 
             result = {'code' : '200', 'message' : '학습 시작', 'worker_id' : results.id}
             data['worker_id'] = result['worker_id']
-            data['state'] = 'n'
+            data['state'] = 'y'  
             data['status'] = '01' #started
             run_util.init_train_state(data)
         except Exception as e:
@@ -49,8 +44,16 @@ class training_start(APIView):
 class training_stop(APIView):
     def post(self , request):
         data = json.loads(request.body) #파라미터 로드
-        result = celery_stop(str(data['worker_id']))
-        
+        worker = run_util.get_worker_site(data)
+        if worker['siteInfo'] != '' :
+            siteInfos = worker['siteInfo']
+            if str(siteInfos['state']) == 'y':
+                result = celery_stop(str(siteInfos['worker_id']))
+                run_util.recoverySite(data)
+            else :
+                result = {'code' : '420', 'message' : '실행중인 작업이 아닙니다.'}
+        else :
+            result = {'code' : '510', 'message' : '사이트 정보가 없습니다.'}
         return Response({'status' : result},content_type=c_type)
     
 class training_status(APIView):
@@ -58,16 +61,20 @@ class training_status(APIView):
         data = json.loads(request.body) #파라미터 로드
         result = {}
         worker = run_util.get_worker_site(data)
-        if worker != '' :
+        if worker['siteInfo'] != '' :
+            siteInfos = worker['siteInfo']
             worker_status = 'PENDING'
-            if str(worker['worker_id']) != '' :
-                worker_status = celery_state(str(worker['worker_id']))
-            worker_site = {'running' : worker['state'], 'step' : worker['status'], 'version' : worker['version']}
+            if str(siteInfos['worker_id']) != '' :
+                worker_status = celery_state(str(siteInfos['worker_id']))
+            worker_site = {'running' : siteInfos['state'], 'step' : siteInfos['status'], 'version' : siteInfos['version']}
             result = {'code' : '200', 'message' : '조회 성공'}
             return Response({'status' : result, 'site_status' : worker_site, 'worker_status' : worker_status},content_type=c_type)
-
         else :
-            result = {'code' : '510', 'message' : '사이트 정보가 없습니다.'}    
+            if worker['status']['code'] != '200':
+                 result = worker['status']
+            else:    
+                result = {'code' : '510', 'message' : '사이트 정보나 학습내역이 없습니다.'}    
+                
         return Response({'status' : result},content_type=c_type)
 
 class training_clear(APIView):

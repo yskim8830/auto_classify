@@ -15,7 +15,7 @@ index = const()
 class question():
     def __init__(self,data):
         self.site_id = data['site']
-        self.searchip = data['searchIp']
+        self.searchip = data['esUrl']
         self.version = str(data['version'])
         
         self.size = 5

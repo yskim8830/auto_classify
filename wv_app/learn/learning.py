@@ -39,7 +39,7 @@ class learn():
             # es.createtemplate('proclassify_template00', es.train_state_template())
             # es.createindex(index.train_state,'') #$train_state 존재여부 확인 후 생성
             #현재 사이트가 학습 중 인지 확인한다. (worker가 템플릿 존재 여부를 확인 하고 sleep)
-            wait = 5
+            wait = 3
             logger.info("[trainToDev] Initial Wait "+ str(wait) +" Seconds..")
             time.sleep(wait)
             version = run_util.isRunning(es,site_no)
@@ -114,7 +114,8 @@ class learn():
                         raise Exception(error_msg)
                 # 사전 저장 경로에 자신이 mecab-ko-dic를 저장한 위치를 적는다. (default: "/usr/local/lib/mecab/dic/mecab-ko-dic") https://lsjsj92.tistory.com/612        
                 m = Mecab(dicpath=os.path.join(mecab_dic_path, 'mecab-ko-dic')) 
-                
+                logger.info("[trainToDev] Initial Wait "+ str(wait) +" Seconds..")
+                time.sleep(wait)
                 #룰(패턴) 정보 저장
                 mapData = {} # $train_state 상태를 업데이트 한다.
                 mapData['status'] = '03' #학습데이터 준비 (사전 정제작업 등)
@@ -231,7 +232,8 @@ class learn():
                     
                     body['_source'] = _source
                     devQuestion.append(body)
-
+                logger.info("[trainToDev] Initial Wait "+ str(wait) +" Seconds..")
+                time.sleep(wait)
                 #start word2Vec
                 mapData = {} # $train_state 상태를 업데이트 한다.
                 mapData['status'] = '04' #word2vec 시작

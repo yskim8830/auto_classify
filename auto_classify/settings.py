@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_celery_results',
     "wv_app",
+    "debug_toolbar",
 ]
 
 MIDDLEWARE = [
@@ -58,7 +59,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'auto_classify.custom_middleware.NonHtmlDebugToolbarMiddleware'
 ]
+
+INTERNAL_IPS = ['127.0.0.1','192.168.0.5']
 
 ROOT_URLCONF = 'auto_classify.urls'
 
