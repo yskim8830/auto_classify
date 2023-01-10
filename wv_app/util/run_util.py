@@ -18,13 +18,11 @@ def isRunning(es, site_no):
     version = -1
     if len(isLearnig) > 0:
         siteInfo = isLearnig[0]['_source']
-        if siteInfo['state'] == 'n':
+        if siteInfo['state'] == 'n' or (siteInfo['state'] == 'y' and siteInfo['status'] == '01'):
             if siteInfo.get('version') != None:
                 version = int(siteInfo['version'])
             else :
                 version = 0
-        elif siteInfo['state'] == 'y' and siteInfo['status'] == '01':
-            version = int(siteInfo['version'])
     else:
         version = 0
     return version

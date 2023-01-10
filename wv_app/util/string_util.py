@@ -61,7 +61,7 @@ def save_dictionary(dicpath, dicList):
 
 def filterSentence(sentence):
     JSON_REMOVE_PATTERN = "(\\r\\n|\\r|\\n|\\n\\r|(\\t)+|(\\s)+)"
-    match = "[^ㄱ-ㅎ가-힣0-9a-zA-Z\\-]"
+    match = "[^A-Za-z0-9가-힣]" 
     ret_str = re.sub(JSON_REMOVE_PATTERN, ' ', sentence)
     ret_str = re.sub(match, ' ', ret_str)
     return ret_str

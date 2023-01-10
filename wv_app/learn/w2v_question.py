@@ -14,44 +14,47 @@ index = const()
 #1. elasticsearch model index search
 class question():
     def __init__(self,data):
-        self.site_id = data['site']
-        self.searchip = data['esUrl']
-        self.version = str(data['version'])
-        
-        self.size = 5
-        if data.get('size') != None :
-            self.size = data['size']
+        try:
+            self.site_id = data['site']
+            self.searchip = data['esUrl']
+            self.version = str(data['version'])
+            self.site_no = -1
+            self.size = 5
+            if data.get('size') != None :
+                self.size = data['size']
 
-        self.mecab = Mecab()
-        self.threshold = 0.00
-        if data.get('threshold') != None :
-            self.threshold = data['threshold']
+            self.mecab = Mecab()
+            self.threshold = 0.00
+            if data.get('threshold') != None :
+                self.threshold = data['threshold']
+        except Exception as e:
+            return str(e)
             
     def word2vec_question(self, question, question_title):
         total_results = {}
         result_code = ""
         result_message = ""
         analysisResult_tagSentence = ""
-        analysisResult_resultType = ""
-        analysisResult_matchedType = "not_matched"
+        analysisResult_resultType = "not_matched"
+        analysisResult_matchedType = ""
         analysisResult_ruleResult = []
         analysisResult_classifyResult = []
         runtime = 0
         starttime = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
-        es_urls = self.searchip.split(':')
-        #검색엔진에 연결한다.
-        es = elastic_util(es_urls[0], es_urls[1])
-        query_string = {
-            "query": {
-                "match": {
-                    "site": self.site_id
+        try:
+            es_urls = self.searchip.split(':')
+            #검색엔진에 연결한다.
+            es = elastic_util(es_urls[0], es_urls[1])
+            query_string = {
+                "query": {
+                    "match": {
+                        "site": self.site_id
+                    }
                 }
             }
-        }
+            
+            siteList = es.search('@proclassify_site',query_string)
         
-        self.site_no = -1
-        siteList = es.search('@proclassify_site',query_string)
-        try:
             if len(siteList) == 0:
                 result_code = "810"
                 result_message = "사이트를 찾을 수 없습니다."
@@ -129,18 +132,16 @@ class question():
                         result_message = "임계치(threshold) 값을 올바르게 입력해주세요."
                         raise Exception
 
-                result_code = "200"
-                result_message = "성공"
                 analysisResult_resultType = "matched"
                 analysisResult_matchedType = "classify"
-            else:
-                result_code = "830"
-                result_message = "No matching value found."
+            result_code = "200"
+            result_message = "성공"
         except Exception as e:
             logger.error(e)
             if result_code == '':
                 result_code = "999"
                 result_message = "Error. " + str(e)
+            analysisResult_resultType = "error"
         finally:
             endtime = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
             runtime = (datetime.strptime(endtime, '%Y%m%d%H%M%S%f')-datetime.strptime(starttime, '%Y%m%d%H%M%S%f')).total_seconds()
@@ -160,7 +161,7 @@ class question():
                             "runtime" : runtime
                          }
             #classify_history에 분류결과를 적재한다. (서비스 데이터일 경우에만)
-            if result_code == '200' and str(self.version) == '-1' :
+            if str(self.version) == '-1':
                 log_data = {}
                 id = str(self.site_no) + '_' + str(endtime)
                 log_data['id'] = id
@@ -172,8 +173,12 @@ class question():
                 log_data['ruleResult'] = str(analysisResult_ruleResult)
                 log_data['classifyResult'] = str(analysisResult_classifyResult)
                 log_data['createDate'] = endtime
-                es.insertData('@proclassify_classify_history', id, log_data)
-            es.close()
+                if result_code != '200' :
+                    log_data['failedMessage'] = result_message
+                if 'es' in vars() :
+                    es.insertData('@proclassify_classify_history', id, log_data)
+            if 'es' in vars() :
+                es.close()
         return total_results
 
 #2. word2vec model file search (임시)
