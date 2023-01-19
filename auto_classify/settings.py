@@ -47,8 +47,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_celery_results',
-    "wv_app",
     "debug_toolbar",
+    'wv_app.loadModel.ClassifyAppConfig',
 ]
 
 MIDDLEWARE = [

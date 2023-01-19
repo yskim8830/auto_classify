@@ -7,6 +7,8 @@ from gensim.models import Word2Vec
 from ..util.const import const
 from ..util.es_util import elastic_util
 from ..util import string_util
+from ..loadModel import rule_data
+from nltk import sent_tokenize
 
 logger = logging.getLogger('my')
 index = const()
@@ -69,11 +71,48 @@ class question():
                 question_idx = index.dev_idx + index.question + str(self.site_no)
                 #intent_idx = index.dev_idx + index.document + str(self.site_no)
                 model_idx = index.dev_idx + index.classify + str(self.site_no)
-            
+                
+            #미리 저장한 태깅 및 룰정보를 로드
+            global rule_data
+            check_rule = False
+            full_text = ''
+            if rule_data['entity'].get(str(self.site_no)) != None:
+                tagging = rule_data['entity'][str(self.site_no)] #태깅정보
+                phrase_matcher = rule_data['matcher'][str(self.site_no)] #매칭사전
+                rule = rule_data['rule'][str(self.site_no)] #룰정보
+                category = rule_data['category'][str(self.site_no)] #카테고리
+                tokenized_text = sent_tokenize(question)
+                for t_text in tokenized_text:
+                    #명사만 추출
+                    text = getWordPosStringList(self.mecab, string_util.filterSentence(t_text.lower()), 'NNG,NNP,NNB,UM,NR,NP') 
+                    logger.debug('Request Tagging Sentence : ' + text)
             #1. 태깅 - start
-            analysisResult_tagSentence = question
+                    doc = tagging(text)
+                    matches = phrase_matcher(doc)
+                    for match_id, start, end in matches:
+                        string_id = tagging.vocab.strings[match_id]
+                        span = doc[start:end]
+                        text = text.replace(span.text, string_id)
+                    full_text += text + ' '
+                    logger.debug('Response Tagging Sentence : ' + text)
+                    
             #2. 룰 매칭 - start
-            
+                    doc2 = rule(text)
+                    results = [{ent.label_ : ent.text} for ent in doc2.ents]
+                    logger.debug([{ent.label_ : ent.text} for ent in doc2.ents]) #룰 결과
+                    for value in results:
+                        if category.get(list(value.keys())[0]) != None:
+                            rule_rst = category[list(value.keys())[0]]
+                            logger.debug(rule_rst)
+                            analysisResult_ruleResult.append({"categoryNo" : list(value.keys())[0] , "categoryNm" : rule_rst['categoryNm'], "fullItem" : rule_rst['fullItem']})
+                            check_rule = True
+            if check_rule:
+                analysisResult_resultType = "matched"
+                analysisResult_matchedType = "rule"
+                analysisResult_tagSentence = full_text.strip()
+            else:
+                analysisResult_tagSentence = question 
+                
             #3. 자동분류 - start
             r_question = getWordStringList(self.mecab, string_util.filterSentence(question.lower()), 'EC,JX,ETN') #질의어의 벡터 평균을 뽑는다.
             """
@@ -120,20 +159,24 @@ class question():
                 #knn 검색 결과를 리턴한다.
                 knn_body = es.question_vector_query(version=self.version,vector=mean,size=self.size)
                 knn_results = es.search(question_idx,knn_body)
+                threshold_result = False
                 for idx, rst in enumerate(knn_results):
                     reliability = 0.00
                     try:
                         reliability = float("{:.2f}".format(rst['_score']*100))
-                        if reliability > float(self.threshold):
-                            analysisResult_classifyResult.append({"categoryNo" : rst['_source']['categoryNo'], "categoryNm" : rst['_source']['categoryNm']
-                                , "fullItem" : rst['_source']['fullItem'], "score" : rst['_score'], "reliability" : str(reliability)+'%'})
+                        if reliability >= float(self.threshold):
+                            threshold_result = True
+                        analysisResult_classifyResult.append({"categoryNo" : rst['_source']['categoryNo'], "categoryNm" : rst['_source']['categoryNm']
+                            , "fullItem" : rst['_source']['fullItem'], "score" : rst['_score'], "reliability" : str(reliability)+'%'})
                     except Exception as e:
                         result_code = "820"
                         result_message = "임계치(threshold) 값을 올바르게 입력해주세요."
                         raise Exception
-
-                analysisResult_resultType = "matched"
-                analysisResult_matchedType = "classify"
+                if threshold_result:
+                    analysisResult_resultType = "matched"
+                    if analysisResult_matchedType != '' :
+                        analysisResult_matchedType += ","
+                    analysisResult_matchedType += "classify"
             result_code = "200"
             result_message = "성공"
         except Exception as e:
@@ -172,6 +215,8 @@ class question():
                 log_data['matchedType'] = analysisResult_matchedType
                 log_data['ruleResult'] = str(analysisResult_ruleResult)
                 log_data['classifyResult'] = str(analysisResult_classifyResult)
+                if len(analysisResult_classifyResult) > 0:
+                    log_data['matchedCategory'] = analysisResult_classifyResult[0]['fullItem']
                 log_data['createDate'] = endtime
                 if result_code != '200' :
                     log_data['failedMessage'] = result_message
@@ -229,6 +274,15 @@ def getWordStringList(mec, sentence, stopTag):
         if str(stopTag).find(word[1]) == -1:
             result.append(word[0])
     return result
+
+def getWordPosStringList(mec, sentence, useTag):
+    result = []
+    morphs = mec.pos(sentence)
+    for word in morphs:
+        if str(useTag).find(word[1]) != -1 and len(word[0]) > 1:
+            result.append(word[0])
+    return ' '.join(result)
+
 
 #not use
 def result_category(total_results,size):

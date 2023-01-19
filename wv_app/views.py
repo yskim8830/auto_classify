@@ -14,6 +14,7 @@ class training_start(APIView):
         data = json.loads(request.body) #파라미터 로드
         #질의를 embedding 하여 저장
         result = {}
+        
         results = start_learning.delay(data) #celery start
         try: 
             result = {'code' : '200', 'message' : '학습 시작', 'worker_id' : results.id}
@@ -22,7 +23,7 @@ class training_start(APIView):
             data['status'] = '01' #started
             run_util.init_train_state(data)
         except Exception as e:
-            result = {'code' : '499', 'message' : e, 'worker_id' : ''}
+            result = {'code' : '499', 'message' : str(e), 'worker_id' : ''}
         
         """
         try: 
@@ -31,13 +32,13 @@ class training_start(APIView):
             param_data['siteNo'] = data['siteNo']
             param_data['userId'] = data['userId']
             param_data['esUrl'] = data['esUrl']
-            param_data['state'] = 'n'
+            param_data['state'] = 'y'
             param_data['status'] = '01' #started
             run_util.init_train_state(param_data)
             learn_result = learning.learn('siteNo_'+str(data['siteNo']))
             result = learn_result.run(data)
         except Exception as e:
-            result = {'code' : '499', 'message' : e, 'worker_id' : ''}
+            result = {'code' : '499', 'message' : str(e), 'worker_id' : ''}
         """
         return Response({'status' : result},content_type=c_type)
     
@@ -105,6 +106,8 @@ class distribute_dictionary(APIView):
 class classify(APIView):
     def get(self , request):
         w2v_query = w2v_question.question(request.query_params.dict())
+        if type(w2v_query) is str:
+            return Response({'status' : {'code' : '999', 'message' : w2v_query}},content_type=c_type)
         question = request.query_params.get('query')
         question_title = request.query_params.get('query_title')
         result_answer = w2v_query.word2vec_question(question,question_title)
@@ -114,6 +117,8 @@ class classify(APIView):
     def post(self , request):
         data = json.loads(request.body) #파라미터 로드
         w2v_query = w2v_question.question(data)
+        if type(w2v_query) is str:
+            return Response({'status' : {'code' : '999', 'message' : w2v_query}},content_type=c_type)
         question = str(data['query'])
         question_title = None
         if data.get('question_title') != None :

@@ -24,40 +24,79 @@ def splitDictionary(str, sep):
 
 # 사전파일을 파일로 저장한다.
 def save_dictionary(dicpath, dicList):
-    stopword = dicFile(dicpath)
-    synonym = dicFile(dicpath)
-    compound = dicFile(dicpath)
-    stop_str = '';
-    synm_str = '';
-    comp_str = '';
-    
-    for dic in dicList:
-        dic = dic['_source']
-        siteNo = str(dic['siteNo'])
-        word = dic['word']
-        nosearchYn = dic['nosearchYn']
-        synonyms = dic['synonyms']
-        wordSep = dic['wordSep']
+    try:
+        stopword = dicFile(dicpath)
+        synonym = dicFile(dicpath)
+        compound = dicFile(dicpath)
+        stop_str = ''
+        synm_str = ''
+        comp_str = ''
         
-        if siteNo is None or word is None or word == '' or nosearchYn is None or nosearchYn == '':
-            continue
-        if nosearchYn == 'y':
-            stop_str += siteNo + '\t' + word + '\n'
-            if synonyms != '':
-                for stop in synonyms.split(','):
-                    if stop != '':
-                        stop_str += siteNo + '\t' + stop + '\n'
-        else:
-            if synonyms != '':
-                synm_str += siteNo + '\t' + word + '\t' + synonyms + '\n'
-            split_word = splitDictionary(word,wordSep)
-            comp_str += siteNo + '\t' + word + '\t' + split_word + '\n'
+        for dic in dicList:
+            dic = dic['_source']
+            siteNo = str(dic['siteNo'])
+            word = dic['word']
+            nosearchYn = dic['nosearchYn']
+            synonyms = dic['synonyms']
+            wordSep = dic['wordSep']
+            
+            if siteNo is None or word is None or word == '' or nosearchYn is None or nosearchYn == '':
+                continue
+            if nosearchYn == 'y':
+                stop_str += siteNo + '\t' + word + '\n'
+                if synonyms != '':
+                    for stop in synonyms.split(','):
+                        if stop != '':
+                            stop_str += siteNo + '\t' + stop + '\n'
+            else:
+                if synonyms != '':
+                    synm_str += siteNo + '\t' + word + '\t' + synonyms + '\n'
+                split_word = splitDictionary(word,wordSep)
+                comp_str += siteNo + '\t' + word + '\t' + split_word + '\n'
                 
-    stopword.create_dic_file(dic='stopword',str=stop_str)
-    synonym.create_dic_file(dic='synonym',str=synm_str)
-    compound.create_dic_file(dic='compound',str=comp_str)
-    
+        stopword.create_dic_file(dic='stopword',str=stop_str, site_no='')
+        synonym.create_dic_file(dic='synonym',str=synm_str, site_no='')
+        compound.create_dic_file(dic='compound',str=comp_str, site_no='')
+    except Exception as e:
+        print(str(e))
+        return False
     return True
+
+#엔티티 사전 파일 저장
+def save_entity_dictionary(dicpath, dicList, site_no):
+    try:
+        entity_path = dicFile(dicpath)
+        entity_str = ''
+        for dic in dicList:
+            dic = dic['_source']
+            entity = str(dic['entity'])
+            entry = str(dic['entry'])
+            entity_str += entity + '\t' + entry + '\n'
+            
+        entity_path.create_dic_file(dic='entity',str=entity_str, site_no=site_no)
+    except Exception as e:
+        print(str(e))
+        return False
+    return True    
+
+#룰 파일 저장
+def save_rule_dictionary(dicpath, dicList, site_no):
+    try:
+        rule_path = dicFile(dicpath)
+        rule_str = ''
+        for dic in dicList:
+            dic = dic['_source']
+            categoryNo = str(dic['categoryNo'])
+            categoryNm = str(dic['categoryNm'])
+            fullItem = str(dic['fullItem'])
+            patternCount = str(dic['patternCount'])
+            for rule in str(dic['rule']).split(' '):
+                rule_str += categoryNo + '\t' + categoryNm + '\t' + fullItem + '\t' + rule + '\t' + patternCount  + '\n'
+            
+        rule_path.create_dic_file(dic='rule',str=rule_str, site_no=site_no)
+    except Exception as e:
+        return False
+    return True    
 
 def filterSentence(sentence):
     JSON_REMOVE_PATTERN = "(\\r\\n|\\r|\\n|\\n\\r|(\\t)+|(\\s)+)"

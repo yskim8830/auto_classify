@@ -45,6 +45,21 @@ class learn():
             version = run_util.isRunning(es,site_no)
             ruleCount = 0
             dataCount = 0
+            
+            query_string = {
+                    "query": {
+                        "query_string": {
+                            "query": "siteNo:" + str(site_no)
+                        }
+                    }
+                }
+            query_string2 = {
+                    "query": {
+                        "query_string": {
+                            "query": "siteNo:" + str(site_no) + " AND useYn:y"
+                        }
+                    }
+                }
             if version > -1:
                 logger.info("[trainToDev] model not running : "+str(site_no))
                 # Index 생성여부를 확인하고 해당 데이터를 만든다.
@@ -71,23 +86,10 @@ class learn():
                 synonyms = dics.synonym()
                 userdefine = dics.compound()
                 new_version = version + 1 #업데이트 되는 버전 정보
-                query_string = {
-                    "query": {
-                        "query_string": {
-                            "query": "siteNo:" + str(site_no)
-                        }
-                    }
-                }
+                
                 #카테고리정보 로드
-                cate_body = {
-                            "query": {
-                                "query_string": {
-                                    "query": "siteNo:" + str(site_no) + " AND useYn:y"
-                                }
-                            }
-                        }
                 try:
-                    category = es.search_srcoll('@proclassify_classify_category', cate_body)
+                    category = es.search_srcoll('@proclassify_classify_category', query_string2)
                     if len(category) == 0 :
                         raise Exception(error_msg)
                 except:
@@ -102,7 +104,7 @@ class learn():
                 if userdefine.get(str(site_no)):
                     try:
                         #사용자 사전 export
-                        file_util.export_user_dic(mecab_dic_path,userdefine[str(site_no)])
+                        file_util.export_user_dic(index.proclassify_path,userdefine[str(site_no)])
                         #사용자 사전 적용 실행
                         if platform.system() == 'Windows':
                             file_util.run_power_shell(mecab_dic_path)
@@ -116,53 +118,74 @@ class learn():
                 m = Mecab(dicpath=os.path.join(mecab_dic_path, 'mecab-ko-dic')) 
                 logger.info("[trainToDev] Initial Wait "+ str(wait) +" Seconds..")
                 time.sleep(wait)
+                
                 #룰(패턴) 정보 저장
                 mapData = {} # $train_state 상태를 업데이트 한다.
                 mapData['status'] = '03' #학습데이터 준비 (사전 정제작업 등)
                 es.updateData(index.train_state, site_no, mapData)
                 
+                # ruleCount = len(patternMapList)
+                # logger.info("[trainToDev] pattern to dev start [ site : "+str(site_no) +" /  pattern count : "+str(ruleCount)+" ] ")
+                logger.info("[trainToDev] pattern to dev start [ site : "+str(site_no) +" ] ")
                 
                 devPattern = []
-                patternMapList = es.search_srcoll('@proclassify_entity_dic',query_string)
-                ruleCount = len(patternMapList)
-                logger.info("[trainToDev] pattern to dev start [ site : "+str(site_no) +" /  pattern count : "+str(ruleCount)+" ] ")
-                
+                patternMapList = es.search_srcoll('@proclassify_entity_dic',query_string2)
+                #엔티티 사전 정보 저장
                 for pattern in patternMapList:
                     pattern = pattern['_source']
-                    key = str(pattern['entityNo'])
+                    key = str(site_no)+'_'+str(new_version)+'_'+str(pattern['entityNo'])
+                    body = {}
+                    _source = {}
+                    body['_index'] = index.dev_idx + index.rule + str(site_no) # 수정필요
+                    body['_action'] = 'index'
+                    body['_id'] = key
+                    _source['id'] = key
+                    _source['entityNo'] = pattern['entityNo']
+                    _source['entity'] = str(pattern['entity'])
+                    _source['entry'] = str(pattern['entry'])
+                    _source['siteNo'] = str(site_no)
+                    _source['version'] = new_version
+                    body['_source'] = _source
+                    devPattern.append(body)
+                # es.bulk(devPattern)
+                result = string_util.save_entity_dictionary(dic_path,devPattern,site_no)
+                if not result:
+                    result_code = '320'
+                    error_msg = '사전 정보가 올바르게 저장되지 않았습니다.'
+                    raise Exception(error_msg)
+                
+                #룰정보 저장
+                ruleMapList = es.search_srcoll('@proclassify_classify_rule',query_string)
+                ruleList = []
+                for rules in ruleMapList:
+                    rules = rules['_source']
+                    key = str(site_no)+'_'+str(new_version)+'_'+str(rules['ruleNo'])
                     body = {}
                     _source = {}
                     body['_index'] = index.dev_idx + index.rule + str(site_no)
                     body['_action'] = 'index'
-                    body['_id'] = str(site_no)+'_'+str(new_version)+'_'+key
+                    body['_id'] = key
                     _source['id'] = key
-                    _source['rule'] = key
+                    _source['ruleNo'] = rules['ruleNo']
+                    _source['rule'] = rules['rule']
                     _source['siteNo'] = str(site_no)
                     _source['version'] = new_version
-                    
-                    #불용어 제거 stopwords
-                    sList = []
-                    for entry in str(pattern['pattern']).split(','):
-                        if stopwords.get(str(site_no)):
-                            if entry not in stopwords[str(site_no)]:
-                                sList.append(entry)
-                        else:
-                            sList.append(entry)
-                            
-                    #동의어 처리
-                    reList = []
-                    for entry in sList:
-                        if synonyms.get(str(site_no)):
-                            if entry in synonyms[str(site_no)]: 
-                                reList.append(synonyms[str(site_no)][entry])
-                            else:
-                                reList.append(entry)
-                        else:
-                            reList.append(entry)
-                    _source['term'] = ' '.join(reList)
+                    _source['patternCount'] = rules['patternCount']
+                    _source['categoryNo'] = rules['categoryNo']
+                    category_info = (item for item in category if item['_id'] == str(rules['categoryNo']))
+                    row_category = next(category_info, False)
+                    if row_category != False:
+                        _source['fullItem']  = row_category['_source']['fullItem']
+                        _source['categoryNm']  = row_category['_source']['categoryNm']
                     body['_source'] = _source
-                    devPattern.append(body)
-                    es.bulk(devPattern)
+                    ruleList.append(body)
+                # es.bulk(ruleList)
+                result = string_util.save_rule_dictionary(dic_path,ruleList,site_no)
+                if not result:
+                    result_code = '321'
+                    error_msg = '룰 정보가 올바르게 저장되지 않았습니다.'
+                    raise Exception(error_msg)
+                        
                 logger.info("[trainToDev] pattern to dev end [ site : "+str(site_no) +" ] ")
                 
                 #문서
@@ -195,7 +218,7 @@ class learn():
                     
                     #동의어 처리
                     reList = []
-                    for morph in morphList:
+                    for morph in sList:
                         if synonyms.get(str(site_no)):
                             if morph in synonyms[str(site_no)]: 
                                 reList.append(synonyms[str(site_no)][morph])
@@ -219,16 +242,16 @@ class learn():
                         _source['categoryNm']  = row_category['_source']['categoryNm']
                     _source['term']  = orgTerm
                     _source['term_syn']  = synonymTerm
-                    _source['keywords']  = string_util.specialReplace(sentence).replace(' ','')
+                    # _source['keywords']  = string_util.specialReplace(sentence).replace(' ','')
                     
                     #questionList.append(synonymTerm)
                     questionList.append(reList)
                     if(orgTerm != synonymTerm):
                         #questionList.append(orgTerm)
                         questionList.append(sList)
-                        _source['terms']  = orgTerm.replace(' ','') + ' ' + synonymTerm.replace(' ','')
-                    else:
-                        _source['terms']  = orgTerm.replace(' ','')
+                        # _source['terms']  = orgTerm.replace(' ','') + ' ' + synonymTerm.replace(' ','')
+                    # else:
+                        # _source['terms']  = orgTerm.replace(' ','')
                     
                     body['_source'] = _source
                     devQuestion.append(body)
@@ -304,7 +327,7 @@ class learn():
         finally:
             end_date = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
             #$train_state 상태를 변경한다.
-            mapData['version'] = version
+            # mapData['version'] = version
             mapData['state'] = 'n'
             # mapData['worker_id'] = ''
             if error_msg != '':

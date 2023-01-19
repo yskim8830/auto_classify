@@ -12,28 +12,42 @@ class dicFile:
         self.path = path
         self.filename = ''
         self.phrase = ''
-    
     def stopword(self):
-        self.filename = 'chat_stopword.txt'
-        self.phrase = "# Stopwords Configuration - pro10-chat for Elasticsearch\n" + "# Lines starting with '#' and empty lines are ignored."
+        self.filename = 'classify_stopword.txt'
+        self.phrase = "# Stopwords Configuration - proclassify for Elasticsearch\n" + "# Lines starting with '#' and empty lines are ignored.\n"
         
     def synonym(self):
-        self.filename = 'chat_sysnonym.txt'
-        self.phrase = "# Synonym Configuration - pro10-chat for Elasticsearch\n" + "# Lines starting with '#' and empty lines are ignored."
+        self.filename = 'classify_sysnonym.txt'
+        self.phrase = "# Synonym Configuration - proclassify for Elasticsearch\n" + "# Lines starting with '#' and empty lines are ignored.\n"
     
     def compound(self):
-        self.filename = 'chat_user_define.txt'
-        self.phrase = "# Compound-Noun Composition Configuration - pro10-chat for Elasticsearch\n" + "# Lines starting with '#' and empty lines are ignored."
-        
-    def create_dic_file(self,dic,str=''):
+        self.filename = 'classify_user_define.txt'
+        self.phrase = "# Compound-Noun Composition Configuration - proclassify for Elasticsearch\n" + "# Lines starting with '#' and empty lines are ignored.\n"
+    
+    def entity(self):
+        self.filename = 'classify_entity.txt'
+        self.phrase = "# Entity-Entry Configuration - proclassify for Elasticsearch\n" + "# Lines starting with '#' and empty lines are ignored.\n"
+    
+    def rule(self):
+        self.filename = 'classify_rule.txt'
+        self.phrase = "# rule Configuration - proclassify for Elasticsearch\n" + "# Lines starting with '#' and empty lines are ignored.\n"
+
+    def create_dic_file(self,dic,site_no='',str=''):
         if dic == 'stopword':
             self.stopword()
         elif dic == 'synonym':
             self.synonym()
         elif dic == 'compound':
             self.compound()
+        elif dic == 'entity':
+            self.entity()
+        elif dic == 'rule':
+            self.rule()
         else:
             return 'not found dic type'
+        
+        if site_no != '':
+            self.filename = site_no + '_' +self.filename
         with open(os.path.join(self.path,self.filename),'w') as f:
             f.write(self.phrase)
             f.write(str)
@@ -42,7 +56,7 @@ class dic:
     def __init__(self, path):
         self.path = path
     def stopword(self):
-        self.filename = 'chat_stopword.txt'
+        self.filename = 'classify_stopword.txt'
         site = ''
         dic_map = {}
         setMap = set()
@@ -63,7 +77,7 @@ class dic:
                     dic_map[site] = setMap
         return dic_map
     def synonym(self):
-        self.filename = 'chat_sysnonym.txt'
+        self.filename = 'classify_sysnonym.txt'
         site = ''
         dic_map = {}
         setMap = {}
@@ -85,7 +99,7 @@ class dic:
                     dic_map[site] = setMap
         return dic_map
     def compound(self):
-        self.filename = 'chat_user_define.txt'
+        self.filename = 'classify_user_define.txt'
         site = ''
         dic_map = {}
         setMap = {}
@@ -121,10 +135,51 @@ class dic:
                 if len(setMap) > 0:
                     dic_map[site] = setMap
         return dic_map
+    def entity(self):
+        file_name = 'classify_entity.txt'
+        file_list = [_ for _ in os.listdir(self.path) if _.endswith(file_name)]
+        entity_list = {}
+        for entity_file in file_list:
+            site_no = entity_file.replace('_'+file_name, '')
+            entity = {}
+            with open(os.path.join(self.path,entity_file),'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line[0] != '#':
+                        data = line.split('\t')
+                        if(len(data) > 1):
+                            entity[data[0]] = data[1]
+            
+            entity_list[site_no] = entity
+        return entity_list
+    
+    def rule(self):
+        file_name = 'classify_rule.txt'
+        file_list = [_ for _ in os.listdir(self.path) if _.endswith(file_name)]
+        rule_list = {}
+        for rule_file in file_list:
+            site_no = rule_file.replace('_'+file_name, '')
+            with open(os.path.join(self.path,rule_file),'r') as f:
+                sub = []
+                for line in f:
+                    line = line.strip()
+                    if line[0] != '#':
+                        data = line.split('\t')
+                        if(len(data) == 5):
+                            rule = {}
+                            rule['categoryNo'] = data[0]
+                            rule['categoryNm'] = data[1]
+                            rule['fullItem'] = data[2]
+                            rule['rule'] = data[3]
+                            rule['count'] = data[4]
+                            sub.append(rule)
+                rule_list[site_no] = sub
+        return rule_list
+            
     
 def export_user_dic(mecab_dic_path, user_dic):
     try:
-        with open(os.path.join(mecab_dic_path,'user-dic','nnp.csv'), 'w' , encoding='utf-8') as f:
+        with open(os.path.join(mecab_dic_path,'mecab-ko-dic-2.1.1-20180720','NNP.csv'), 'w' , encoding='utf-8') as f:
             for words in user_dic.values():
                 if len(words) >0:
                     for wordset in words:
