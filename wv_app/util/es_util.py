@@ -155,6 +155,17 @@ class elastic_util:
                 result.append(response['hits']['hits'][i])
         return result
     
+    def msearch(self, body, type):
+        response = self.es.msearch(body=body)
+        result = []
+        if type == 'agg':
+            for i in response['responses']:
+                result.append(i['aggregations']) 
+        else :
+            for i in response['responses']:
+                result.append(response[i]['hits']['hits'][0]) 
+        return result
+    
     def close(self):
         self.es.close()
     
@@ -907,7 +918,139 @@ class elastic_util:
                     },
                     {
                         "search_string_04": {
-                            "match": "*term*",
+                            "match": "*categoryNm*",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text",
+                            "similarity": "pro_tfidf"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_05": {
+                            "match": "*No",
+                            "match_mapping_type": "long",
+                            "mapping": {
+                            "type": "long"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_06": {
+                            "match": "*version*",
+                            "match_mapping_type": "long",
+                            "mapping": {
+                            "type": "long"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_07": {
+                            "match": "*_date",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "type": "date",
+                            "format": "yyyyMMddHHmmssSSS"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+        
+    def entity_template(self):
+        return {
+            "index_patterns": [
+                "$*_entity_*"
+            ],
+            "settings": {
+                "index.mapping.ignore_malformed": True,
+                "index": {
+                "number_of_shards": "5",
+                "auto_expand_replicas": "0-1",
+                "analysis": {
+                    "analyzer": {
+                        "whitespace_analyzer": {
+                            "filter": [
+                            "lowercase",
+                            "trim"
+                            ],
+                            "tokenizer": "my_whitespace"
+                        },
+                        "pattern_analyzer" : {
+                            "filter" : [
+                                "lowercase"
+                            ],
+                            "tokenizer" : "my_pattern"
+                        }
+                    },
+                    "tokenizer": {
+                        "my_whitespace": {
+                            "type": "whitespace",
+                            "max_token_length": "60"
+                        },
+                        "my_pattern" : {
+                            "pattern" : [
+                                ",",
+                                "whitespace"
+                            ],
+                            "type" : "pattern"
+                        }
+                    }
+                },
+                "similarity": {
+                    "pro_tfidf": {
+                    "type": "scripted",
+                    "script": {
+                        "source": "double norm = (doc.freq); return query.boost  *norm;"
+                    }
+                    }
+                }
+                },
+                "index.mapping.total_fields.limit": 99999999
+            },
+            "mappings": {
+                "dynamic_templates": [
+                    {
+                        "search_string_01": {
+                            "match": "id",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_02": {
+                            "match": "entry",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "pattern_analyzer",
+                            "type": "text",
+                            "fields" : {
+                                    "keyword" : {
+                                    "type" : "text",
+                                    "analyzer" : "whitespace_analyzer"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "search_string_03": {
+                            "match": "*site*",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                            "analyzer": "whitespace_analyzer",
+                            "type": "text"
+                            }
+                        }
+                    },
+                    {
+                        "search_string_04": {
+                            "match": "*entity*",
                             "match_mapping_type": "string",
                             "mapping": {
                             "analyzer": "whitespace_analyzer",

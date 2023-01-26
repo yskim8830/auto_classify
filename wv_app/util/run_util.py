@@ -42,6 +42,13 @@ def createQuestionIndex(es, site_no):
         es.createindex(index.svc_idx + index.rule + str(site_no) + "_0", '')
         es.createindex(index.svc_idx + index.rule + str(site_no) + "_1", '')
         es.createAlias(index.als_idx + index.rule + str(site_no) ,index.svc_idx + index.rule + str(site_no) + "_1")
+        
+    if not es.existIndex(index.dev_idx + index.entity + str(site_no)):
+        es.createtemplate('proclassify_template03', es.entity_template())
+        es.createindex(index.dev_idx + index.entity + str(site_no), '')
+        es.createindex(index.svc_idx + index.entity + str(site_no) + "_0", '')
+        es.createindex(index.svc_idx + index.entity + str(site_no) + "_1", '')
+        es.createAlias(index.als_idx + index.entity + str(site_no) ,index.svc_idx + index.entity + str(site_no) + "_1")
     """  
     if not es.existIndex(index.dev_idx + index.document + str(site_no)):
         es.createtemplate('proclassify_template03', es.doc_template())

@@ -9,6 +9,7 @@ class const():
         self._classify = 'classify_'
         self._document = 'document_'
         self._rule = 'rule_'
+        self._entity = 'entity_'
         self._question = 'question_'
         
         properties = configparser.ConfigParser()
@@ -40,6 +41,9 @@ class const():
     @property    
     def question(self):
         return self._question
+    @property    
+    def entity(self):
+        return self._entity
     @property    
     def proclassify_path(self):
         return self._proclassify_path

@@ -10,6 +10,7 @@ from ..util import string_util
 from ..util.const import const
 from ..util.file_util import dic
 from ..util.es_util import elastic_util
+from .. import loadModel
 import time
 
 logger = logging.getLogger('my')
@@ -124,19 +125,19 @@ class learn():
                 mapData['status'] = '03' #학습데이터 준비 (사전 정제작업 등)
                 es.updateData(index.train_state, site_no, mapData)
                 
-                # ruleCount = len(patternMapList)
                 # logger.info("[trainToDev] pattern to dev start [ site : "+str(site_no) +" /  pattern count : "+str(ruleCount)+" ] ")
                 logger.info("[trainToDev] pattern to dev start [ site : "+str(site_no) +" ] ")
                 
                 devPattern = []
                 patternMapList = es.search_srcoll('@proclassify_entity_dic',query_string2)
+                ruleCount = len(patternMapList)
                 #엔티티 사전 정보 저장
                 for pattern in patternMapList:
                     pattern = pattern['_source']
                     key = str(site_no)+'_'+str(new_version)+'_'+str(pattern['entityNo'])
                     body = {}
                     _source = {}
-                    body['_index'] = index.dev_idx + index.rule + str(site_no) # 수정필요
+                    body['_index'] = index.dev_idx + index.entity + str(site_no) # 수정필요
                     body['_action'] = 'index'
                     body['_id'] = key
                     _source['id'] = key
@@ -147,8 +148,8 @@ class learn():
                     _source['version'] = new_version
                     body['_source'] = _source
                     devPattern.append(body)
-                # es.bulk(devPattern)
-                result = string_util.save_entity_dictionary(dic_path,devPattern,site_no)
+                es.bulk(devPattern)
+                result = string_util.save_entity_dictionary(dic_path,devPattern,site_no,new_version)
                 if not result:
                     result_code = '320'
                     error_msg = '사전 정보가 올바르게 저장되지 않았습니다.'
@@ -179,8 +180,8 @@ class learn():
                         _source['categoryNm']  = row_category['_source']['categoryNm']
                     body['_source'] = _source
                     ruleList.append(body)
-                # es.bulk(ruleList)
-                result = string_util.save_rule_dictionary(dic_path,ruleList,site_no)
+                es.bulk(ruleList)
+                result = string_util.save_rule_dictionary(dic_path,ruleList,site_no,new_version)
                 if not result:
                     result_code = '321'
                     error_msg = '룰 정보가 올바르게 저장되지 않았습니다.'
@@ -325,9 +326,14 @@ class learn():
             logger.error(e)
             return {'status' : {'code' : result_code, 'message' : error_msg} , 'version' : version}
         finally:
+            if error_msg == '':
+                if ruleCount > 0:
+                    loadModel.setRuleModel() #룰 모델 정보를 업로드한다.
+            
             end_date = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
             #$train_state 상태를 변경한다.
-            # mapData['version'] = version
+            if version != -1 :
+                mapData['version'] = version
             mapData['state'] = 'n'
             # mapData['worker_id'] = ''
             if error_msg != '':

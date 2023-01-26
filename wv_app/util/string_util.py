@@ -63,7 +63,7 @@ def save_dictionary(dicpath, dicList):
     return True
 
 #엔티티 사전 파일 저장
-def save_entity_dictionary(dicpath, dicList, site_no):
+def save_entity_dictionary(dicpath, dicList, site_no, version):
     try:
         entity_path = dicFile(dicpath)
         entity_str = ''
@@ -71,16 +71,18 @@ def save_entity_dictionary(dicpath, dicList, site_no):
             dic = dic['_source']
             entity = str(dic['entity'])
             entry = str(dic['entry'])
-            entity_str += entity + '\t' + entry + '\n'
-            
-        entity_path.create_dic_file(dic='entity',str=entity_str, site_no=site_no)
+            entity_str += str(version) + '\t' + entity + '\t' + entry + '\n'
+        if version == -1:
+            entity_path.service_dic_file(dic='entity',str=entity_str, site_no=site_no)
+        else:
+            entity_path.create_dic_file(dic='entity',str=entity_str, site_no=site_no)
     except Exception as e:
         print(str(e))
         return False
     return True    
 
 #룰 파일 저장
-def save_rule_dictionary(dicpath, dicList, site_no):
+def save_rule_dictionary(dicpath, dicList, site_no, version):
     try:
         rule_path = dicFile(dicpath)
         rule_str = ''
@@ -91,9 +93,11 @@ def save_rule_dictionary(dicpath, dicList, site_no):
             fullItem = str(dic['fullItem'])
             patternCount = str(dic['patternCount'])
             for rule in str(dic['rule']).split(' '):
-                rule_str += categoryNo + '\t' + categoryNm + '\t' + fullItem + '\t' + rule + '\t' + patternCount  + '\n'
-            
-        rule_path.create_dic_file(dic='rule',str=rule_str, site_no=site_no)
+                rule_str += str(version) + '\t' +categoryNo + '\t' + categoryNm + '\t' + fullItem + '\t' + rule + '\t' + patternCount  + '\n'
+        if version == -1:    
+            rule_path.service_dic_file(dic='rule',str=rule_str, site_no=site_no)
+        else:
+            rule_path.create_dic_file(dic='rule',str=rule_str, site_no=site_no)
     except Exception as e:
         return False
     return True    

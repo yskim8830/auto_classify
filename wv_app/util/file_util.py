@@ -48,7 +48,36 @@ class dicFile:
         
         if site_no != '':
             self.filename = site_no + '_' +self.filename
-        with open(os.path.join(self.path,self.filename),'w') as f:
+        
+        opentype = 'w'
+        if dic == 'entity' or dic == 'rule':
+            if os.path.isfile(os.path.join(self.path,self.filename)):
+                opentype = 'a'
+        with open(os.path.join(self.path,self.filename),opentype) as f:
+            if opentype == 'w':
+                f.write(self.phrase)
+            f.write(str)
+    
+    #운영반영 파일
+    def service_dic_file(self,dic,site_no='',str=''):
+        if dic == 'stopword':
+            self.stopword()
+        elif dic == 'synonym':
+            self.synonym()
+        elif dic == 'compound':
+            self.compound()
+        elif dic == 'entity':
+            self.entity()
+        elif dic == 'rule':
+            self.rule()
+        else:
+            return 'not found dic type'
+        
+        if site_no != '':
+            self.filename = site_no + '_-1_' +self.filename
+        
+        opentype = 'w'
+        with open(os.path.join(self.path,self.filename),opentype) as f:
             f.write(self.phrase)
             f.write(str)
             
@@ -141,16 +170,30 @@ class dic:
         entity_list = {}
         for entity_file in file_list:
             site_no = entity_file.replace('_'+file_name, '')
-            entity = {}
+            #-1이있으면 나누어서 저장
+            if '-1' in site_no:
+                site_no = site_no.split('_')[0]
+            entitys = {}
             with open(os.path.join(self.path,entity_file),'r') as f:
+                version = ''
+                entity = []
                 for line in f:
                     line = line.strip()
                     if line[0] != '#':
                         data = line.split('\t')
-                        if(len(data) > 1):
-                            entity[data[0]] = data[1]
-            
-            entity_list[site_no] = entity
+                        if(len(data) == 3 ):
+                            if version == '':
+                                version = data[0]
+                            elif version != data[0]:
+                                entitys[version] = entity
+                                entity = []
+                                version = data[0]
+                            entity.append({data[1] : data[2]})
+                entitys[version] = entity
+            if entity_list.get(site_no) != None :
+                entity_list[site_no].update(entitys)
+            else:
+                entity_list[site_no] = entitys
         return entity_list
     
     def rule(self):
@@ -159,21 +202,30 @@ class dic:
         rule_list = {}
         for rule_file in file_list:
             site_no = rule_file.replace('_'+file_name, '')
+            #-1이있으면 나누어서 저장
+            if '-1' in site_no:
+                site_no = site_no.split('_')[0]
+            rules = {}
             with open(os.path.join(self.path,rule_file),'r') as f:
-                sub = []
+                version = ''
+                rule = []
                 for line in f:
                     line = line.strip()
                     if line[0] != '#':
                         data = line.split('\t')
-                        if(len(data) == 5):
-                            rule = {}
-                            rule['categoryNo'] = data[0]
-                            rule['categoryNm'] = data[1]
-                            rule['fullItem'] = data[2]
-                            rule['rule'] = data[3]
-                            rule['count'] = data[4]
-                            sub.append(rule)
-                rule_list[site_no] = sub
+                        if(len(data) == 6):
+                            if version == '':
+                                version = data[0]
+                            elif version != data[0]:
+                                rules[version] = rule
+                                rule = []
+                                version = data[0]
+                            rule.append({'categoryNo' : data[1], 'categoryNm' : data[2], 'fullItem' : data[3] ,'rule' : data[4] ,'count' : data[5]})
+                rules[version] = rule
+            if rule_list.get(site_no) != None :
+                rule_list[site_no].update(rules)
+            else:
+                rule_list[site_no] = rules
         return rule_list
             
     

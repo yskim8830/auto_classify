@@ -14,7 +14,7 @@ class training_start(APIView):
         data = json.loads(request.body) #파라미터 로드
         #질의를 embedding 하여 저장
         result = {}
-        
+        """
         results = start_learning.delay(data) #celery start
         try: 
             result = {'code' : '200', 'message' : '학습 시작', 'worker_id' : results.id}
@@ -39,7 +39,7 @@ class training_start(APIView):
             result = learn_result.run(data)
         except Exception as e:
             result = {'code' : '499', 'message' : str(e), 'worker_id' : ''}
-        """
+        
         return Response({'status' : result},content_type=c_type)
     
 class training_stop(APIView):

@@ -1,8 +1,11 @@
 import logging
+import time
 from datetime import datetime
 from ..util import run_util
+from ..util import string_util
 from ..util.const import const
 from ..util.es_util import elastic_util
+from .. import loadModel
 
 logger = logging.getLogger('my')
 index = const()
@@ -12,6 +15,7 @@ class dist():
         
     def run(self, data):
         try:
+            wait = 3
             result_code = '200'
             error_msg = ""
             es_urls = str(data['esUrl']).split(':')
@@ -21,6 +25,7 @@ class dist():
             site_no = data['siteNo']
             userId = data['userId']
             version = int(data['version'])
+            dic_path = index.proclassify_dic_path
             if version == 0:
                 result_code = '999'
                 error_msg = '학습된 데이터가 아닙니다.'
@@ -76,10 +81,46 @@ class dist():
                     return [prdMAlias, prdMIndex, bckMIndex]
                     
                 #Question 데이터를 개발 -> 운영으로 변경 한다.
+                query_string2 = {
+                    "query": {
+                        "query_string": {
+                            "query": "siteNo:" + str(site_no)
+                        }
+                    }
+                }
+                
                 results = []
-                indexNames = [index.question, index.classify, index.rule]
+                indexNames = [index.question, index.classify, index.entity, index.rule]
                 for idxName in indexNames:
                     results.append(runIndexDevToSvc(idxName))
+                    
+                    logger.info("[devToSvc] Initial Wait "+ str(wait) +" Seconds..")
+                    time.sleep(wait)
+                
+                #alias 변경
+                for prdMAlias,prdMIndex,bckMIndex in results:
+                    es.changeAlias(prdMAlias,prdMIndex,bckMIndex)
+                    
+                    #서비스 룰 저장
+                    if index.entity in prdMAlias:
+                        entityList = es.search_srcoll(prdMAlias,query_string2)
+                        result = string_util.save_entity_dictionary(dic_path,entityList,site_no,-1)
+                        if not result:
+                            result_code = '320'
+                            error_msg = '사전 정보가 올바르게 저장되지 않았습니다.'
+                            raise Exception(error_msg)
+                    if index.rule in prdMAlias:
+                        ruleList = es.search_srcoll(prdMAlias,query_string2)
+                        result = string_util.save_rule_dictionary(dic_path,ruleList,site_no,-1)
+                        if not result:
+                            result_code = '321'
+                            error_msg = '룰 정보가 올바르게 저장되지 않았습니다.'
+                            raise Exception(error_msg)
+                    
+                #룰정보 메모리 리로드
+                logger.info("[devToSvc] start reload Rule Model")
+                loadModel.setRuleModel()
+                logger.info("[devToSvc] end reload Rule Model")
                 
                 #learning log update
                 learning_query_string1 = {
@@ -104,16 +145,14 @@ class dist():
                     }
                 }
                 es.updateAllData('@proclassify_learning_log',learning_query_string2)
-                #alias 변경
-                for prdMAlias,prdMIndex,bckMIndex in results:
-                    es.changeAlias(prdMAlias,prdMIndex,bckMIndex)
             else:
                 status = "모델이 수행중 입니다. : "+str(site_no) +" $classify_train_state 인덱스를 확인 하세요."
                 logger.info(status)
                 result_code = '710'
                 return {'status' : {'code' : result_code, 'message' : status} , 'version' : version}
         except Exception as e:
-            result_code = '999'
+            if result_code != '':
+                result_code = '999'
             error_msg = str(e)
             logger.error(e)
             return {'status' : {'code' : result_code, 'message' : error_msg} , 'version' : version}

@@ -77,10 +77,14 @@ class question():
             check_rule = False
             full_text = ''
             if rule_data['entity'].get(str(self.site_no)) != None:
-                tagging = rule_data['entity'][str(self.site_no)] #태깅정보
-                phrase_matcher = rule_data['matcher'][str(self.site_no)] #매칭사전
-                rule = rule_data['rule'][str(self.site_no)] #룰정보
-                category = rule_data['category'][str(self.site_no)] #카테고리
+                if rule_data['entity'][str(self.site_no)].get(str(self.version)) == None :
+                    result_code = "830"
+                    result_message = "해당버전을 찾을 수 없습니다."
+                    raise Exception
+                tagging = rule_data['entity'][str(self.site_no)][str(self.version)] #태깅정보
+                phrase_matcher = rule_data['matcher'][str(self.site_no)][str(self.version)] #매칭사전
+                rule = rule_data['rule'][str(self.site_no)][str(self.version)] #룰정보
+                category = rule_data['category'][str(self.site_no)][str(self.version)] #카테고리
                 tokenized_text = sent_tokenize(question)
                 for t_text in tokenized_text:
                     #명사만 추출
@@ -106,6 +110,11 @@ class question():
                             logger.debug(rule_rst)
                             analysisResult_ruleResult.append({"categoryNo" : list(value.keys())[0] , "categoryNm" : rule_rst['categoryNm'], "fullItem" : rule_rst['fullItem']})
                             check_rule = True
+            else :
+                result_code = "810"
+                result_message = "사이트를 찾을 수 없습니다."
+                raise Exception                
+            
             if check_rule:
                 analysisResult_resultType = "matched"
                 analysisResult_matchedType = "rule"

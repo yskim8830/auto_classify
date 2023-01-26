@@ -1,0 +1,92 @@
+2023-01-26 11:11:03,145 [INFO] my: [devToSvc] start [ userId : promanager / siteNo :1 / version :15]
+2023-01-26 11:11:03,166 [INFO] my: [runIndexDevToSvc] start [ indexName : question_ / siteNo : 1 / version : 15 ]
+2023-01-26 11:11:03,200 [INFO] my: [runIndexDevToSvc] end [ total : 1]
+2023-01-26 11:11:03,200 [INFO] my: [devToSvc] Initial Wait 3 Seconds..
+2023-01-26 11:11:06,203 [INFO] my: [runIndexDevToSvc] start [ indexName : classify_ / siteNo : 1 / version : 15 ]
+2023-01-26 11:11:06,237 [INFO] my: [runIndexDevToSvc] end [ total : 2]
+2023-01-26 11:11:06,237 [INFO] my: [devToSvc] Initial Wait 3 Seconds..
+2023-01-26 11:11:09,240 [INFO] my: [runIndexDevToSvc] start [ indexName : entity_ / siteNo : 1 / version : 15 ]
+2023-01-26 11:11:09,270 [INFO] my: [runIndexDevToSvc] end [ total : 9]
+2023-01-26 11:11:09,270 [INFO] my: [devToSvc] Initial Wait 3 Seconds..
+2023-01-26 11:11:12,274 [INFO] my: [runIndexDevToSvc] start [ indexName : rule_ / siteNo : 1 / version : 15 ]
+2023-01-26 11:11:12,302 [INFO] my: [runIndexDevToSvc] end [ total : 9]
+2023-01-26 11:11:12,302 [INFO] my: [devToSvc] Initial Wait 3 Seconds..
+2023-01-26 11:11:15,447 [INFO] my: [devToSvc] start reload Rule Model
+2023-01-26 11:11:17,525 [INFO] my: [devToSvc] end reload Rule Model
+2023-01-26 11:11:17,578 [INFO] my: [devToSvc] end]
+2023-01-26 11:12:52,772 [INFO] my: [devToSvc] start [ userId : promanager / siteNo :1 / version :15]
+2023-01-26 11:12:52,780 [INFO] my: [runIndexDevToSvc] start [ indexName : question_ / siteNo : 1 / version : 15 ]
+2023-01-26 11:12:52,812 [INFO] my: [runIndexDevToSvc] end [ total : 1]
+2023-01-26 11:12:52,812 [INFO] my: [devToSvc] Initial Wait 3 Seconds..
+2023-01-26 11:12:55,816 [INFO] my: [runIndexDevToSvc] start [ indexName : classify_ / siteNo : 1 / version : 15 ]
+2023-01-26 11:12:55,852 [INFO] my: [runIndexDevToSvc] end [ total : 2]
+2023-01-26 11:12:55,852 [INFO] my: [devToSvc] Initial Wait 3 Seconds..
+2023-01-26 11:12:58,856 [INFO] my: [runIndexDevToSvc] start [ indexName : entity_ / siteNo : 1 / version : 15 ]
+2023-01-26 11:12:59,777 [INFO] my: [runIndexDevToSvc] end [ total : 10]
+2023-01-26 11:12:59,777 [INFO] my: [devToSvc] Initial Wait 3 Seconds..
+2023-01-26 11:13:02,778 [INFO] my: [runIndexDevToSvc] start [ indexName : rule_ / siteNo : 1 / version : 15 ]
+2023-01-26 11:13:03,374 [INFO] my: [runIndexDevToSvc] end [ total : 10]
+2023-01-26 11:13:03,375 [INFO] my: [devToSvc] Initial Wait 3 Seconds..
+2023-01-26 11:13:06,511 [INFO] my: [devToSvc] start reload Rule Model
+2023-01-26 11:13:08,603 [INFO] my: [devToSvc] end reload Rule Model
+2023-01-26 11:13:08,652 [INFO] my: [devToSvc] end]
+2023-01-26 11:18:16,833 [INFO] my: [devToSvc] start [ userId : promanager / siteNo :1 / version :15]
+2023-01-26 11:18:16,841 [INFO] my: [runIndexDevToSvc] start [ indexName : question_ / siteNo : 1 / version : 15 ]
+2023-01-26 11:18:16,871 [INFO] my: [runIndexDevToSvc] end [ total : 1]
+2023-01-26 11:18:16,871 [INFO] my: [devToSvc] Initial Wait 3 Seconds..
+2023-01-26 11:18:19,875 [INFO] my: [runIndexDevToSvc] start [ indexName : classify_ / siteNo : 1 / version : 15 ]
+2023-01-26 11:18:19,905 [INFO] my: [runIndexDevToSvc] end [ total : 2]
+2023-01-26 11:18:19,905 [INFO] my: [devToSvc] Initial Wait 3 Seconds..
+2023-01-26 11:18:22,909 [INFO] my: [runIndexDevToSvc] start [ indexName : entity_ / siteNo : 1 / version : 15 ]
+2023-01-26 11:18:22,939 [INFO] my: [runIndexDevToSvc] end [ total : 10]
+2023-01-26 11:18:22,939 [INFO] my: [devToSvc] Initial Wait 3 Seconds..
+2023-01-26 11:18:25,943 [INFO] my: [runIndexDevToSvc] start [ indexName : rule_ / siteNo : 1 / version : 15 ]
+2023-01-26 11:18:25,972 [INFO] my: [runIndexDevToSvc] end [ total : 10]
+2023-01-26 11:18:25,973 [INFO] my: [devToSvc] Initial Wait 3 Seconds..
+2023-01-26 11:18:29,118 [INFO] my: [devToSvc] start reload Rule Model
+2023-01-26 11:18:31,716 [INFO] my: [devToSvc] end reload Rule Model
+2023-01-26 11:18:31,763 [INFO] my: [devToSvc] end]
+2023-01-26 12:03:53,859 [INFO] my: [trainToDev] Initial Wait 3 Seconds..
+2023-01-26 12:03:56,868 [INFO] my: [trainToDev] model not running : 1
+2023-01-26 12:03:57,036 [ERROR] my: list index out of range
+2023-01-26 12:03:57,130 [INFO] my: [trainToDev] Initial Wait 3 Seconds..
+2023-01-26 12:04:00,143 [INFO] my: [trainToDev] pattern to dev start [ site : 1 ] 
+2023-01-26 12:04:00,180 [INFO] my: [trainToDev] pattern to dev end [ site : 1 ] 
+2023-01-26 12:04:00,231 [INFO] my: [trainToDev] data to dev start [ site : 1 /  data count : 1 ] 
+2023-01-26 12:04:00,238 [INFO] my: [trainToDev] Initial Wait 3 Seconds..
+2023-01-26 12:04:03,250 [INFO] my: [word2vecTrain] start [ siteNo :1 / size : 1]
+2023-01-26 12:04:03,401 [INFO] my: [word2vecTrain] end
+2023-01-26 12:04:03,402 [INFO] my: [trainToDev] question to dev search vector list start [ site : 1 ]
+2023-01-26 12:04:03,404 [INFO] my: complete set vector
+2023-01-26 12:04:03,415 [INFO] my: [trainToDev] question to dev search vector list end [ site : 1 /  count : 1 ]
+2023-01-26 12:04:03,437 [INFO] my: [trainToDev] model running success.
+2023-01-26 12:04:43,649 [ERROR] my: 
+2023-01-26 12:05:20,165 [ERROR] my: 
+2023-01-26 12:06:38,901 [INFO] my: [trainToDev] Initial Wait 3 Seconds..
+2023-01-26 12:06:41,911 [INFO] my: [trainToDev] model not running : 1
+2023-01-26 12:06:42,063 [ERROR] my: list index out of range
+2023-01-26 12:06:42,153 [INFO] my: [trainToDev] Initial Wait 3 Seconds..
+2023-01-26 12:06:45,166 [INFO] my: [trainToDev] pattern to dev start [ site : 1 ] 
+2023-01-26 12:06:45,205 [INFO] my: [trainToDev] pattern to dev end [ site : 1 ] 
+2023-01-26 12:06:45,215 [INFO] my: [trainToDev] data to dev start [ site : 1 /  data count : 1 ] 
+2023-01-26 12:06:45,217 [INFO] my: [trainToDev] Initial Wait 3 Seconds..
+2023-01-26 12:06:48,229 [INFO] my: [word2vecTrain] start [ siteNo :1 / size : 1]
+2023-01-26 12:06:48,365 [INFO] my: [word2vecTrain] end
+2023-01-26 12:06:48,365 [INFO] my: [trainToDev] question to dev search vector list start [ site : 1 ]
+2023-01-26 12:06:48,366 [INFO] my: complete set vector
+2023-01-26 12:06:48,376 [INFO] my: [trainToDev] question to dev search vector list end [ site : 1 /  count : 1 ]
+2023-01-26 12:07:05,567 [INFO] my: [trainToDev] model running success.
+2023-01-26 12:08:58,268 [INFO] my: [trainToDev] Initial Wait 3 Seconds..
+2023-01-26 12:09:01,281 [INFO] my: [trainToDev] model not running : 1
+2023-01-26 12:09:01,432 [ERROR] my: list index out of range
+2023-01-26 12:09:01,514 [INFO] my: [trainToDev] Initial Wait 3 Seconds..
+2023-01-26 12:09:04,527 [INFO] my: [trainToDev] pattern to dev start [ site : 1 ] 
+2023-01-26 12:09:04,568 [INFO] my: [trainToDev] pattern to dev end [ site : 1 ] 
+2023-01-26 12:09:04,578 [INFO] my: [trainToDev] data to dev start [ site : 1 /  data count : 1 ] 
+2023-01-26 12:09:04,580 [INFO] my: [trainToDev] Initial Wait 3 Seconds..
+2023-01-26 12:09:07,591 [INFO] my: [word2vecTrain] start [ siteNo :1 / size : 1]
+2023-01-26 12:09:07,719 [INFO] my: [word2vecTrain] end
+2023-01-26 12:09:07,720 [INFO] my: [trainToDev] question to dev search vector list start [ site : 1 ]
+2023-01-26 12:09:07,721 [INFO] my: complete set vector
+2023-01-26 12:09:07,731 [INFO] my: [trainToDev] question to dev search vector list end [ site : 1 /  count : 1 ]
+2023-01-26 12:09:13,589 [INFO] my: [trainToDev] model running success.

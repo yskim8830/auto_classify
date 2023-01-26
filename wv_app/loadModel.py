@@ -31,36 +31,72 @@ def setRuleModel():
     entitys = dics.entity()
     rules = dics.rule()
     
-    entity_result = {}
-    entity_matcher_result = {}
+    entity_t_result = {}
+    entity_matcher_t_result = {}
     for entity in entitys:
+        entity_result = {}
+        entity_matcher_result = {}
         sub_nlp = nlp
         phrase_matcher = PhraseMatcher(sub_nlp.vocab)
-        for sub in entitys[entity]:
-            various = [sub_nlp.make_doc(text) for text in entitys[entity][sub].split(',')]
-            phrase_matcher.add(sub,None, *various)
-        entity_result[entity] = sub_nlp
-        entity_matcher_result[entity] = phrase_matcher
+        for num, versions in enumerate(reversed(entitys[entity])):
+            if(num > 2):
+                break
+            for sub in entitys[entity][versions]:
+                for sub_key, sub_val in sub.items():
+                    various = [sub_nlp.make_doc(text) for text in sub_val.split(',')]
+                    phrase_matcher.add(sub_key,None, *various)
+            entity_result[versions] = sub_nlp
+            entity_matcher_result[versions] = phrase_matcher
+        #운영 
+        if entitys[entity].get('-1') != None:
+            for sub in entitys[entity]['-1']:
+                for sub_key, sub_val in sub.items():
+                    various = [sub_nlp.make_doc(text) for text in sub_val.split(',')]
+                    phrase_matcher.add(sub_key,None, *various)
+            entity_result['-1'] = sub_nlp
+            entity_matcher_result['-1'] = phrase_matcher
+           
+        entity_t_result[entity] = entity_result
+        entity_matcher_t_result[entity] = entity_matcher_result
         
-    rule_result = {}
-    rule_category_result = {}
+    rule_t_result = {}
+    rule_category_t_result = {}
     for rule in rules:
+        rule_result = {}
+        rule_category_result = {}
         sub_nlp = nlp
         ruler = sub_nlp.add_pipe("entity_ruler")
-        patterns = []
-        category = {}
-        for sub in rules[rule]:
-            various = {'label' : sub['categoryNo'], 'pattern' : sub['rule'].replace(',' , ' ')}
-            patterns.append(various)
-            various2 = {'categoryNm' : sub['categoryNm'], 'fullItem' : sub['fullItem']}
-            category[sub['categoryNo']] = various2
-        ruler.add_patterns(patterns)
-        rule_result[rule] = sub_nlp
-        rule_category_result[rule] = category
+        for num, versions in enumerate(reversed(rules[rule])):
+            if(num > 2):
+                break
+            patterns = []
+            category = {}
+            for sub in rules[rule][versions]:
+                various = {'label' : sub['categoryNo'], 'pattern' : sub['rule'].replace(',' , ' ')}
+                patterns.append(various)
+                various2 = {'categoryNm' : sub['categoryNm'], 'fullItem' : sub['fullItem']}
+                category[sub['categoryNo']] = various2
+            ruler.add_patterns(patterns)
+            rule_result[versions] = sub_nlp
+            rule_category_result[versions] = category
+        #운영
+        if rules[rule].get('-1') != None:
+            patterns = []
+            category = {}
+            for sub in rules[rule]['-1']:
+                various = {'label' : sub['categoryNo'], 'pattern' : sub['rule'].replace(',' , ' ')}
+                patterns.append(various)
+                various2 = {'categoryNm' : sub['categoryNm'], 'fullItem' : sub['fullItem']}
+                category[sub['categoryNo']] = various2
+            ruler.add_patterns(patterns)
+            rule_result['-1'] = sub_nlp
+            rule_category_result['-1'] = category
+        rule_t_result[rule] = rule_result
+        rule_category_t_result[rule] = rule_category_result
         
     #global 함수로 담기
     global rule_data
-    rule_data['entity'] = entity_result
-    rule_data['matcher'] = entity_matcher_result
-    rule_data['rule'] = rule_result
-    rule_data['category'] = rule_category_result
+    rule_data['entity'] = entity_t_result
+    rule_data['matcher'] = entity_matcher_t_result
+    rule_data['rule'] = rule_t_result
+    rule_data['category'] = rule_category_t_result
