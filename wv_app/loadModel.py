@@ -1,10 +1,7 @@
 from django.apps import AppConfig
 import os
-import re
 import spacy
-import configparser
 from spacy.matcher import PhraseMatcher
-from nltk import sent_tokenize
 from .util.const import const
 from .util.file_util import dic
 
@@ -24,7 +21,8 @@ class ClassifyAppConfig(AppConfig):
 #룰패턴에 필요한 정보를 로드한다.
 def setRuleModel():
     print('load spacy.')
-    nlp = spacy.load("en_core_web_sm")
+    # nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.blank("en")
     print('load spacy success.')
     #사전파일 map 으로 저장
     dics = dic(index.proclassify_dic_path)
@@ -65,14 +63,15 @@ def setRuleModel():
         rule_result = {}
         rule_category_result = {}
         sub_nlp = nlp
-        ruler = sub_nlp.add_pipe("entity_ruler")
+        ruler = sub_nlp.add_pipe("entity_ruler", name="autoclassify_"+str(rule))
         for num, versions in enumerate(reversed(rules[rule])):
+            ruler.clear()
             if(num > 2):
                 break
             patterns = []
             category = {}
             for sub in rules[rule][versions]:
-                various = {'label' : sub['categoryNo'], 'pattern' : sub['rule'].replace(',' , ' ')}
+                various = {'label' : sub['ruleNo'], 'pattern' : sub['rule'].replace(',' , ' ')}
                 patterns.append(various)
                 various2 = {'categoryNm' : sub['categoryNm'], 'fullItem' : sub['fullItem']}
                 category[sub['categoryNo']] = various2
@@ -81,10 +80,11 @@ def setRuleModel():
             rule_category_result[versions] = category
         #운영
         if rules[rule].get('-1') != None:
+            ruler.clear()
             patterns = []
             category = {}
             for sub in rules[rule]['-1']:
-                various = {'label' : sub['categoryNo'], 'pattern' : sub['rule'].replace(',' , ' ')}
+                various = {'label' : sub['ruleNo'], 'pattern' : sub['rule'].replace(',' , ' ')}
                 patterns.append(various)
                 various2 = {'categoryNm' : sub['categoryNm'], 'fullItem' : sub['fullItem']}
                 category[sub['categoryNo']] = various2

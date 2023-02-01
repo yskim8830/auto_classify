@@ -64,12 +64,12 @@ class question():
             
             self.site_no = es.search('@proclassify_site',query_string)[0]['_source']['siteNo']
             question_idx = index.als_idx + index.question + str(self.site_no)
-            #intent_idx = index.als_idx + index.document + str(self.site_no)
+            rule_idx = index.als_idx + index.rule + str(self.site_no)
             model_idx = index.als_idx + index.classify + str(self.site_no)
             #개발 일 경우 version >-1 이상이고 version -1 일 경우 운영
             if int(self.version) > -1:
                 question_idx = index.dev_idx + index.question + str(self.site_no)
-                #intent_idx = index.dev_idx + index.document + str(self.site_no)
+                rule_idx = index.dev_idx + index.rule + str(self.site_no)
                 model_idx = index.dev_idx + index.classify + str(self.site_no)
                 
             #미리 저장한 태깅 및 룰정보를 로드
@@ -88,7 +88,9 @@ class question():
                 tokenized_text = sent_tokenize(question)
                 for t_text in tokenized_text:
                     #명사만 추출
-                    text = getWordPosStringList(self.mecab, string_util.filterSentence(t_text.lower()), 'NNG,NNP,NNB,UM,NR,NP') 
+                    # text = getWordPosStringList(self.mecab, string_util.filterSentence(t_text.lower()), 'NNG,NNP,NNB,UM,NR,NP') 
+                    #조사제거
+                    text = removePostpositionSentence(self.mecab, string_util.filterSentence(t_text.lower()), 'JKS,JKC,JKG,JKO,JKB,JKV,JKQ,JX,JC') 
                     logger.debug('Request Tagging Sentence : ' + text)
             #1. 태깅 - start
                     doc = tagging(text)
@@ -96,12 +98,15 @@ class question():
                     for match_id, start, end in matches:
                         string_id = tagging.vocab.strings[match_id]
                         span = doc[start:end]
-                        text = text.replace(span.text, string_id)
+                        text = text.replace(span.text, string_id + ' ')
+                        text = text.replace('  ', ' ')
+                        text = text.replace('@@', '@') #중복으로 태깅될시 replace
                     full_text += text + ' '
                     logger.debug('Response Tagging Sentence : ' + text)
                     
             #2. 룰 매칭 - start
                     doc2 = rule(text)
+                    """
                     results = [{ent.label_ : ent.text} for ent in doc2.ents]
                     logger.debug([{ent.label_ : ent.text} for ent in doc2.ents]) #룰 결과
                     for value in results:
@@ -110,11 +115,81 @@ class question():
                             logger.debug(rule_rst)
                             analysisResult_ruleResult.append({"categoryNo" : list(value.keys())[0] , "categoryNm" : rule_rst['categoryNm'], "fullItem" : rule_rst['fullItem']})
                             check_rule = True
-            else :
-                result_code = "810"
-                result_message = "사이트를 찾을 수 없습니다."
-                raise Exception                
-            
+                    """      
+                    rule_id = ''
+                    rule_result = []
+                    rule_results = {}
+                    for ent in doc2.ents:
+                        if rule_id == '' :
+                            rule_id = ent.label_
+                        elif rule_id != ent.label_ :
+                            if rule_results.get(rule_id) != None:
+                                rule_results[rule_id] += rule_result
+                            else:
+                                rule_results[rule_id] = rule_result
+                            rule_result = []
+                            rule_id = ent.label_
+                        rule_result.append(str(ent.text).replace(' ', ','))
+                    #last
+                    if rule_results.get(rule_id) != None: 
+                        rule_results[rule_id] += rule_result
+                    else:
+                        rule_results[rule_id] = rule_result
+                    if len(rule_results) > 0:
+                        rule_query_strings = []
+                        for ruleNo in rule_results:
+                            ruleNoList = rule_results[ruleNo]
+                            rule_query_string = {
+                                "bool": {
+                                    "must": [
+                                        {
+                                        "simple_query_string": {
+                                            "fields": [
+                                            "rule.keyword"
+                                            ],
+                                            "query": ' '.join(ruleNoList),
+                                            "default_operator": "AND"
+                                        }
+                                        },{
+                                        "match": {
+                                            "patternCount": len(ruleNoList)
+                                        }
+                                        }
+                                    ]
+                                }
+                            }
+                            rule_query_strings.append(rule_query_string)
+                        
+                        rules_query_string = {
+                            "query": {
+                                "bool": {
+                                "must": [
+                                    {
+                                        "bool": {
+                                            "should": rule_query_strings
+                                        }
+                                    }
+                                ]
+                                }
+                            }
+                        }
+                        if int(self.version) > -1 :
+                            rule_filter = {
+                                        "match": {
+                                            "version": self.version
+                                        }
+                            }
+                            rules_query_string['query']['bool']['must'].append(rule_filter)
+                        rule_search_results = es.search(rule_idx,rules_query_string)
+                        for idx, rst in enumerate(rule_search_results):
+                            try:
+                                analysisResult_ruleResult.append({"categoryNo" : rst['_source']['categoryNo'] , "categoryNm" : rst['_source']['categoryNm'], "fullItem" : rst['_source']['fullItem']})
+                            except Exception as e:
+                                result_code = "999"
+                                result_message = "룰 생성과정 오류"
+                                raise Exception
+                            check_rule = True
+
             if check_rule:
                 analysisResult_resultType = "matched"
                 analysisResult_matchedType = "rule"
@@ -257,12 +332,12 @@ class vec_dic_question():
         #검색엔진에 연결한다.
         es = elastic_util(es_urls[0], es_urls[1])
         question_idx = index.als_idx + index.question + str(self.site_no)
-        #intent_idx = index.als_idx + index.document + str(self.site_no)
+        rule_idx = index.als_idx + index.rule + str(self.site_no)
         #model_idx = index.als_idx + index.classify + str(self.site_no)
         #개발 일 경우 version >-1 이상이고 version -1 일 경우 운영
         if int(self.version) > -1:
             question_idx = index.dev_idx + index.question + str(self.site_no)
-            #intent_idx = index.dev_idx + index.document + str(self.site_no)
+            rule_idx = index.dev_idx + index.rule + str(self.site_no)
             #model_idx = index.dev_idx + index.classify + str(self.site_no)
         r_question = getWordStringList(self.mecab, question, 'EC,JX,ETN')
         
@@ -292,6 +367,20 @@ def getWordPosStringList(mec, sentence, useTag):
             result.append(word[0])
     return ' '.join(result)
 
+def removePostpositionSentence(mec, sentence, stopTag):
+    morphs = mec.pos(sentence)
+    noun = ''
+    print(morphs)
+    for word in morphs:
+        if str(stopTag).find(word[1]) > -1:
+            if noun != '':
+                if str(noun)+' '+str(word[0])+' ' in sentence: #명사와 조사가 띄어쓰기 되어있을때
+                    sentence = str(sentence).replace(str(noun)+' '+str(word[0]), str(noun))
+                else:
+                    sentence = str(sentence).replace(str(noun)+str(word[0]), str(noun))
+        else:
+            noun = word[0]
+    return sentence
 
 #not use
 def result_category(total_results,size):

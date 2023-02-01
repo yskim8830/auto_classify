@@ -189,11 +189,13 @@ class dic:
                                 entity = []
                                 version = data[0]
                             entity.append({data[1] : data[2]})
-                entitys[version] = entity
-            if entity_list.get(site_no) != None :
-                entity_list[site_no].update(entitys)
-            else:
-                entity_list[site_no] = entitys
+                if version != '':
+                    entitys[version] = entity
+            if len(entitys) > 0:
+                if entity_list.get(site_no) != None :
+                    entity_list[site_no].update(entitys)
+                else:
+                    entity_list[site_no] = entitys
         return entity_list
     
     def rule(self):
@@ -220,12 +222,14 @@ class dic:
                                 rules[version] = rule
                                 rule = []
                                 version = data[0]
-                            rule.append({'categoryNo' : data[1], 'categoryNm' : data[2], 'fullItem' : data[3] ,'rule' : data[4] ,'count' : data[5]})
-                rules[version] = rule
-            if rule_list.get(site_no) != None :
-                rule_list[site_no].update(rules)
-            else:
-                rule_list[site_no] = rules
+                            rule.append({'categoryNo' : data[1], 'categoryNm' : data[2], 'fullItem' : data[3] ,'rule' : data[4] ,'ruleNo' : data[5]})
+                if version != '':
+                    rules[version] = rule
+            if len(rules) > 0:
+                if rule_list.get(site_no) != None :
+                    rule_list[site_no].update(rules)
+                else:
+                    rule_list[site_no] = rules
         return rule_list
             
     

@@ -91,9 +91,9 @@ def save_rule_dictionary(dicpath, dicList, site_no, version):
             categoryNo = str(dic['categoryNo'])
             categoryNm = str(dic['categoryNm'])
             fullItem = str(dic['fullItem'])
-            patternCount = str(dic['patternCount'])
+            ruleNo = str(dic['ruleNo'])
             for rule in str(dic['rule']).split(' '):
-                rule_str += str(version) + '\t' +categoryNo + '\t' + categoryNm + '\t' + fullItem + '\t' + rule + '\t' + patternCount  + '\n'
+                rule_str += str(version) + '\t' +categoryNo + '\t' + categoryNm + '\t' + fullItem + '\t' + rule + '\t' + ruleNo  + '\n'
         if version == -1:    
             rule_path.service_dic_file(dic='rule',str=rule_str, site_no=site_no)
         else:
