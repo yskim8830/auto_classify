@@ -39,7 +39,7 @@
     
 # for ent in doc.ents:
 #     print(ent.text, ent.label_)
-
+"""
 import re
 from konlpy.tag import Mecab
 
@@ -73,3 +73,18 @@ def removePostpositionSentence(mec, sentence, stopTag):
     
 t_text = '안녕하세요 대림역테스트를 하고 수도권테스트도 할래요'
 text = removePostpositionSentence(mecab, filterSentence(t_text.lower()), 'JKS,JKC,JKG,JKO,JKB,JKV,JKQ,JX,JC')
+"""
+
+import numpy as np
+from sklearn.metrics import f1_score
+
+mean = np.array(np.ones(4023, np.uint8))
+fault =  np.array(np.zeros(977, np.uint8))
+y = np.array(np.ones(5000, np.uint8))
+p = np.concatenate((mean, fault))
+
+f1 = f1_score(y,p)
+print(f1)
+
+#0.8917211570431121
+#0.9176317783309883

@@ -161,9 +161,18 @@ class elastic_util:
         if type == 'agg':
             for i in response['responses']:
                 result.append(i['aggregations']) 
+        elif type == 'vector': 
+            for i in response['responses']:
+                if(i['hits']['total']['value'] > 0):
+                    rst = []
+                    for j in range(0,100):
+                        rst.append(i['hits']['hits'][0]['_source']['dm_'+str(j)])
+                    result.append(rst)
+                else:
+                    result.append(-1)
         else :
             for i in response['responses']:
-                result.append(response[i]['hits']['hits'][0]) 
+                result.append(i['hits']['hits']) 
         return result
     
     def close(self):
