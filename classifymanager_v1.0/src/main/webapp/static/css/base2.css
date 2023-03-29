@@ -1,0 +1,95 @@
+@charset "utf-8";
+
+/* .lblCnt {height:34px; line-height:34px;} */
+
+/* .mtb5 {margin-top:5px !important; margin-bottom:5px !important;} */
+
+/* .mt0 {margin-top:0 !important;} */
+/* .mt5 {margin-top:5px !important;} */
+/* .mt10 {margin-top:10px !important;} */
+/* .mtm15 {margin-top:-15px !important;} */
+
+/* .mb5 {margin-bottom:5px !important;} */
+/* .mb10 {margin-bottom:10px !important;} */
+/* .mb20 {margin-bottom:20px !important;} */
+/* .mbm15 {margin-bottom:-15px !important;} */
+
+/* .ml10 {margin-left:10px !important;} */
+/* .ml20 {margin-left:20px !important;} */
+/* .ml30 {margin-left:30px !important;} */
+
+/* .mlpm35 {margin-left:-35% !important;} */
+
+/* .mr0 {margin-right:0 !important;} */
+/* .mr5 {margin-right:5px !important;} */
+/* .mr10 {margin-right:10px !important;} */
+/* .mr50 {margin-right:50px !important;} */
+
+/* .pr10 {padding-right:10px !important;} */
+
+/* .w800 {width:800px !important;} */
+/* .w1000 {width:1000px !important;} */
+
+/* .w30p {width:30% !important;} */
+/* .w33p {width:33% !important;} */
+/* .w34p {width:34% !important;} */
+/* .w35p {width:35% !important;} */
+/* .w38p {width:38% !important;} */
+/* .w40p {width:40% !important;} */
+/* .w45p {width:45% !important;} */
+/* .w50p {width:50% !important;} */
+/* .w55p {width:55% !important;} */
+/* .w60p {width:60% !important;} */
+/* .w65p {width:65% !important;} */
+/* .w70p {width:70% !important;} */
+/* .w80p {width:80% !important;} */
+
+
+/* .h100p {height:100% !important; } */
+
+/* .h330 {height:330px !important; } */
+/* .h350 {height:350px !important; } */
+/* .h400 {height:400px !important; } */
+/* .h460 {height:460px !important; } */
+/* .h500 {height:500px !important; } */
+/* .h520 {height:500px !important; } */
+/* .h600 {height:600px !important; } */
+/* .h700 {height:700px !important; } */
+
+
+/* /* 테이블 내에 체크 박스 사용 시 크기 조절 */ */
+/* .resizeChk  {height:20px !important;} */
+
+/* .hide {display:none;} */
+
+/* .fl {float:left;} */
+/* .fr {float:right;} */
+
+/* .vm {vertical-align: middle !important;} */
+
+/* .pointer {cursor:pointer;} */
+
+/* 파이, 도넛 차트 수치 색상 */
+.c3-chart-arc text { fill: #000000 !important; font-weight: bold !important; }
+
+.tblTitle { background-color: #e9f0f6; color: #2b5075; font-weight: bold; border-right: 2px solid #fff; text-align: center;}
+.lblTitle {font-weight: bold; color: #333; font-size: 13px;}
+
+
+/* 최빈도 질문관리 달력 */
+#tableCalendar th { text-align:center; font-weight: bold; font-size: 1.1em; border: 1px solid #DCDCDC;}
+#tableCalendar td { text-align:center; font-weight: bold; border: 1px solid #DCDCDC;}
+#tableCalendar .today { background: #8ec8fb !important; }
+#tableCalendar .notyet { background: #e6c564 !important; opacity: 1 !important; }
+#tableCalendar .scheduled { background: #f5ebbb; cursor:pointer; opacity: 0.6; }
+#tableCalendar .todayBox { width:20px; height:20px; color: #8ec8fb; }
+#tableCalendar .notyetBox { width:20px; height:20px; color: #e6c564; opacity: 1 !important; }
+#tableCalendar .scheduledBox { width:20px; height:20px; color: #f5ebbb; opacity: 0.6; }
+#tableCalendar .holiday { color: #ea0000; }
+#tableCalendar .blur { font-weight: normal; opacity: 0.4; }
+
+/* 최빈도 질문 관리 최빈도 질문 */
+.freq-question-li { height:37.5px; line-height:37.5px; border-bottom:0.5px solid #DCDCDC; padding-left:15px; }
+/* textarea 크기 조절바 제거 */
+/* textarea { resize:none !important; } */
+

@@ -1,0 +1,116 @@
+@charset "utf-8";
+/*Weight*/
+.w-25{width: 25px;}
+.w-100{width: 100px !important;}
+.w-120{width: 120px;}
+.w-150{width: 150px;}
+.w-300{width: 300px;}
+.w-600{width: 600px !important;}
+
+/*Height*/
+.h-25{height: 25px;}
+.h-30{height: 30px;}
+.h-40 {height:40px !important; }
+.h-50{height: 50px;}
+.h-150{height: 150px; overflow: auto;}
+.h-300{height: 300px; overflow: auto;}
+.h-350{height: 350px; overflow: auto;}
+.h-370{height: 370px; overflow: auto;}
+.h-400{height: 400px; overflow: auto;}
+.h-450{height: 450px; overflow: auto;}
+.h-480{height: 480px; overflow: auto;}
+.h-510{height: 510px; overflow: auto;}
+.h-550{height: 550px; overflow: auto;}
+.h-600{height: 600px; overflow: auto;}
+.h-750{height: 750px; overflow: auto;}
+.h-800{height: 800px; overflow: auto;}
+.h-830{height: 830px; overflow: auto;}
+.h-900{height: 900px; overflow: auto;}
+.h-1000{height: 1000px; overflow: auto;}
+
+/*margin*/
+.mTop-5{margin-top: 5px;}
+.mTop-8{margin-top: 8px;}
+.mTop-10{margin-top: 10px !important;}
+.mTop-15{margin-top: 15px;}
+.mTop-20{margin-top: 20px;}
+.mTop-50{margin-top: 50px;}
+.mBottom-5{margin-bottom: 5px !important;}
+.mBottom-10{margin-bottom: 10px;}
+.mLeft-5{margin-left: 5px;}
+.mLeft-10{margin-left: 10px !important;}
+.mLeft-15{margin-left: 15px;}
+.mLeft-20{margin-left: 20px;}
+.mLeft-m30{margin-left: -30px;}
+.mRight-30{margin-right: 30px !important;}
+.mRight-Zero{margin-right: 0px !important;}
+.mZero{margin: 0px !important;}
+
+/*padding*/
+.pTop-20{padding-top: 20px;}
+.pLeft-10{padding-left: 10px;}
+
+.td-overtext{text-overflow: elipsis; overflow:hidden;white-space:nowrap;}
+
+select{!important; height: 30px; font-size: 14px;}
+
+/*영역*/
+.subTitle{background-color: #eaeaea; font-weight: bold; font-size: 20px;}
+.login-from{width: 500px !important; height: 250px; margin-top: 200px;}
+
+/*폰트*/
+.font-size-20{font-size: 20px;}
+.font-bold{font-weight: bold;}
+.font-lighter{font-weight: lighter;}
+.color-red{color: red;}
+.color-blue{color: blue;}
+.color-muted{color: #d3d3d3 !important;}
+
+/*border*/
+.b-solid{border: solid;}
+.border-bottom1{border-bottom: 1px solid;}
+.border-top1{border-top:3px solid #bbbbbb;}
+
+/*align*/
+.valign-mid{vertical-align: middle !important;}
+.valign-top{vertical-align: top !important;}
+
+/*line-height*/
+.lHeigh-10{line-height: 10px;}
+
+.over-hidden{overflow: hidden;}
+
+/* 캘린더 CSS */
+.cal-wrap  {}
+.cal-typeA {width:260px;  border:1px solid #4175b5 !important;height:210px; background-color:#fff;}
+.cal-header ul { overflow:hidden; height:35px; padding-top: 5px; list-style: none; margin-left: -25px;}
+.cal-header li { float:left; }
+/*.cal-header li.cal-date { background-color:#f3f6f9;  display:inline; padding:6px 0 4px 0; #padding:5px 0; text-align:center }
+.cal-header li.cal-date span  { color:#333; font-weight:bold; }*/
+.cal-cont     { width:100%; position:relative; }
+.calendar    {}
+.calendar th    { height:22px;padding:6px 10px !important; border-bottom:1px solid #dbdae1;}
+.calendar td      { text-align:center;  height:18px  !important;padding:0  !important; border-bottom:1px solid #dbdae1;}
+.calendar td a    { font-size:11px; display:block; padding:3px 0px 2px 0px; height:18px  !important; }
+.calendar td a:hover    { text-decoration:none; background-color:#838383; color:white; }
+.calendar th.sun   { color:#e7305a; }
+.calendar th.sat   { color:#3471b3; }
+.calendar td.sun a { color:#e7305a; }
+.calendar td.sun a:hover { color:white; }
+.calendar td.sat   {}
+.calendar td.sat a { color:#3471b3; }
+.calendar td.sat a:hover { color:white; }
+.cal-typeA .cal-close     {  border-top:1px solid #d0d0d0;  text-align:right; padding:3px 5px 3px 0; }
+.cal-typeA .cal-close a   { font-size:11px; color:#3471b3; display:inline-block; }
+.cal-typeA .cal-close a:hover   { text-decoration: none; }
+
+
+/*신규 지식 학습 트레이닝*/
+.link { stroke: #ccc; }
+.nodetext {pointer-events: none; font-size: 12px; font-family:'맑은 고딕',Malgun Gothic,'돋움',Dotum,AppleGothic,sans-serif; cursor:pointer;}
+.circle {cursor:pointer;}
+#graph { height:325px; margin:auto; }
+
+.inblock {display: inline-block;}
+
+.tdbr{border-right: 1px solid #ddd !important;border-left: 1px solid #ddd !important;}
