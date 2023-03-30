@@ -1,0 +1,12 @@
+{
+    "properties": [
+        {
+            "name": "project.version",
+            "type": "String"
+        },
+        {
+            "name": "project.timestamp",
+            "type": "String"
+        }
+    ]
+}
